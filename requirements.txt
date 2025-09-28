@@ -1,0 +1,4 @@
+# Playwright - современная библиотека для автоматизации браузеров
+playwright>=1.40.0
+aiogram==3.22
+python-dotenv==1.0.1

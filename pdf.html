@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>department. — Счёт</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="page">
+    <div class="container">
+      <div class="brand">department.<small>Created by traders for traders</small></div>
+
+      <div class="info-grid">
+        <div class="label">Покупатель</div>
+        <div id="customer_name" class="value">{{customer_name}}</div>
+        <div class="label">Номер заказа</div>
+        <div id="order_number" class="value">{{order_number}}</div>
+        <div class="label">Номер телефона</div>
+        <div id="phone" class="value">{{phone}}</div>
+        <div class="label">Дата покупки</div>
+        <div id="purchase_date" class="value">{{purchase_date}}</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="items">
+        <div class="th left">Позиция</div>
+        <div class="th">Тариф</div>
+        <div class="th">Номер</div>
+        <div class="th">Стоимость</div>
+
+        <div class="item-left">
+          <div class="thumb">
+            <img src="assets/color-logo.svg" alt="Color logo" class="thumb-img">
+          </div>
+          <div id="product_name">{{product_name}}</div>
+        </div>
+        <div id="tariff" class="cell tariff">{{tariff}}</div>
+        <div id="number" class="cell number">#{{short_number}}</div>
+        <div id="price" class="cell price">{{price}}</div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="note-title">Дата генерации счёта</div>
+          <div id="generation_time" class="muted">{{generation_time}}</div>
+          <div style="height:25px"></div>
+          <div>Настоящий счёт подтверждает оплату доступа в закрытую торговую группу<br />Dept Space</div>
+        </div>
+        <div>
+          <div>По любым вопросам, связанными с<br />данным заказом, обращайтесь на электронный адрес:<br /><span
+              class="muted-strong">dept.trading@mail.ru</span></div>
+          <div style="height:29px"></div>
+          <div class="footer-brand" style="text-align:right; font-weight:700;">department.</div>
+        </div>
+      </div>
+
+      <div class="footer-mark" aria-hidden="true">
+        <img src="assets/fond.png" alt="Fond" class="footer-img">
+        <img src="assets/skol.png" alt="Skolkovo" class="footer-img">
+      </div>
+
+    </div>
+  </div>
+</body>
+
+</html>

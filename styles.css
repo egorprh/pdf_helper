@@ -1,0 +1,292 @@
+/* Fonts */
+@font-face {
+    font-family: 'SF Pro Display';
+    src: url('fonts/SF-Pro-Display-Regular.woff2') format('woff2'),
+        url('fonts/SF-Pro-Display-Regular.woff') format('woff');
+    font-weight: 400;
+
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SF Pro Display';
+    src: url('fonts/SF-Pro-Display-Medium.woff2') format('woff2'),
+        url('fonts/SF-Pro-Display-Medium.woff') format('woff');
+    font-weight: 500;
+
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SF Pro Display';
+    src: url('fonts/SF-Pro-Display-Semibold.woff2') format('woff2'),
+        url('fonts/SF-Pro-Display-Semibold.woff') format('woff');
+    font-weight: 600;
+
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SF Pro Display';
+    src: url('fonts/SF-Pro-Display-Bold.woff2') format('woff2'),
+        url('fonts/SF-Pro-Display-Bold.woff') format('woff');
+    font-weight: 700;
+    font-display: swap;
+}
+
+/* A4 размеры */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    background: #f5f5f5;
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Arial, sans-serif;
+}
+
+.page {
+    width: 595px;
+    /* A4 ширина */
+    height: 842px;
+    /* A4 высота */
+    margin: 0;
+    background: #ffffff;
+    position: relative;
+    /* Print fidelity */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+/* Фон-лого как псевдоэлемент: сохраняем размеры и прозрачность */
+.page::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 383px;
+    height: 284px;
+    background: url("assets/bg.png") center/contain no-repeat;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+}
+
+/* Контейнер и базовая типографика */
+.container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 42px 33px;
+    color: #111;
+}
+
+.brand {
+    text-align: center;
+    margin-bottom: 0;
+    font-weight: 600;
+    /* Semibold */
+    font-size: 48px;
+    letter-spacing: -0.07em;
+    /* -7% */
+    line-height: 18px;
+}
+
+.brand small {
+    display: block;
+    margin-top: 16px;
+    font-weight: 400;
+    /* Regular */
+
+    font-size: 13px;
+    letter-spacing: -0.02em;
+    /* -2% */
+    line-height: 18px;
+}
+
+.info-grid {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 30% 25% 30% 15%;
+    /* label,value,label,value */
+    column-gap: 0;
+    row-gap: 20px;
+    /* расстояние между строками */
+    margin-top: 57px;
+    /* от brand small */
+    font-size: 13px;
+}
+
+.label {
+    font-weight: 500;
+    /* Medium */
+
+    font-size: 13px;
+    line-height: 18px;
+    color: #7E7E7E;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.value {
+    white-space: nowrap;
+    text-align: left;
+}
+
+.value::before {
+    content: ':';
+    margin-right: 8px;
+}
+
+.divider {
+    height: 1px;
+    margin: 38px 0 18px;
+    background: url("assets/line.svg") center/527px 1px no-repeat;
+}
+
+/* Единая сетка для заголовка и данных */
+.items {
+    display: grid;
+    width: 100%;
+    /* 1-й столбец ~50%, остальные поровну делят вторую половину */
+    grid-template-columns: minmax(0, 3fr) 1fr 1fr 1fr;
+    column-gap: 24px;
+    row-gap: 30px;
+    font-size: 13px;
+    margin-top: 39px;
+    /* от разделителя до заголовков */
+}
+
+.item-left {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    column-gap: 12px;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.thumb {
+    width: 84px;
+    height: 84px;
+    border-radius: 12px;
+    background: #ffffff;
+    /* Box-shadow в PDF может рендериться серым прямоугольником; drop-shadow стабильнее */
+    filter: drop-shadow(0px 0px 6.6px rgba(0, 0, 0, 0.16));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: 13px 17px;
+    /* 13px top/bottom, 17px left/right */
+}
+
+.thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.muted {
+    color: #6b7280;
+}
+
+.muted-strong {
+    color: #374151;
+    font-weight: 600;
+}
+
+/* Заголовки */
+.items .th {
+    justify-self: start;
+    /* выравнивание по левому краю ячеек */
+    font-weight: 700;
+    /* Bold */
+    font-size: 13px;
+    line-height: 18px;
+    letter-spacing: -0.02em;
+}
+
+/* Ячейки значений */
+.items .cell {
+    justify-self: start;
+    font-size: 12px;
+}
+
+/* Выравнивание по колонкам: заголовки и значения */
+.items .th:nth-child(2),
+.items .th:nth-child(3) {
+    justify-self: center;
+    text-align: center;
+}
+
+.items .th:nth-child(4) {
+    justify-self: end;
+    text-align: right;
+}
+
+.items .tariff,
+.items .number {
+    justify-self: center;
+    text-align: center;
+}
+
+.items .price {
+    justify-self: end;
+    text-align: right;
+}
+
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* 50% / 50% */
+    column-gap: 40px;
+    margin-top: 150px;
+    /* от items */
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.two-col>div:first-child {
+    text-align: left;
+}
+
+.two-col>div:last-child {
+    text-align: right;
+}
+
+.note-title {
+    font-weight: 600;
+    margin-bottom: 14px;
+    font-size: 15px;
+}
+
+.footer-brand {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+/* Футер-логотипы как независимый слой относительно page */
+.footer-mark {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 42px;
+    width: 227px;
+    height: 35px;
+    pointer-events: none;
+    user-select: none;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.footer-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
