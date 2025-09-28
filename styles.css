@@ -131,8 +131,9 @@ body {
 }
 
 .value {
-    white-space: nowrap;
     text-align: left;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .value::before {
@@ -166,6 +167,11 @@ body {
     align-items: center;
     font-size: 12px;
     font-weight: 600;
+}
+
+.item-left > div:last-child {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .thumb {
