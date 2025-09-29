@@ -19,10 +19,28 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 import asyncio
 from render_pdf import html_to_pdf_playwright
+from utils import send_email_with_attachment
+from filters.admin_only import AdminOnly, NonAdminOnly
 
 
 logging.basicConfig(level=logging.INFO)
 load_dotenv()
+
+PDF_HTML_PATH = "pdf.html"
+
+# Единая карта кодов продуктов к человеческим названиям
+PRODUCT_MAP = {
+    "product_a": "Торговая группа Dept Space",
+    "product_b": "Обучение Dept Space",
+    "product_c": "Soft Screener",
+}
+
+# Единая карта кодов длительности к названиям
+DURATION_MAP = {
+    "1m": "1 месяц",
+    "3m": "3 месяца",
+    "12m": "12 месяцев",
+}
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 if not TELEGRAM_TOKEN:
@@ -43,19 +61,19 @@ class Form(StatesGroup):
     purchase_date = State()
     cost = State()
     confirm = State()
+    send_email_confirm = State()
 
+ 
 def product_kb():
     builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text="Продукт А", callback_data="product:product_a"))
-    builder.row(InlineKeyboardButton(text="Продукт B", callback_data="product:product_b"))
-    builder.row(InlineKeyboardButton(text="Продукт C", callback_data="product:product_c"))
+    for code, title in PRODUCT_MAP.items():
+        builder.row(InlineKeyboardButton(text=title, callback_data=f"product:{code}"))
     return builder.as_markup()
 
 def duration_kb():
     builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text="1 месяц", callback_data="duration:1m"))
-    builder.row(InlineKeyboardButton(text="6 месяцев", callback_data="duration:6m"))
-    builder.row(InlineKeyboardButton(text="12 месяцев", callback_data="duration:12m"))
+    for code, title in DURATION_MAP.items():
+        builder.row(InlineKeyboardButton(text=title, callback_data=f"duration:{code}"))
     return builder.as_markup()
 
 def confirm_kb():
@@ -64,7 +82,14 @@ def confirm_kb():
     builder.row(InlineKeyboardButton(text="Отменить", callback_data="confirm:no"))
     return builder.as_markup()
 
-PDF_HTML_PATH = "pdf.html"
+def email_confirm_kb():
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="Да", callback_data="sendmail:yes"),
+        InlineKeyboardButton(text="Нет", callback_data="sendmail:no")
+    )
+    return builder.as_markup()
+
 
 def format_cost(cost_str: str) -> str:
     """Форматирует стоимость, добавляя пробелы после тысяч."""
@@ -85,8 +110,7 @@ def fill_pdf_html(data: dict, submission_id: str) -> str:
     with open(PDF_HTML_PATH, "r", encoding="utf-8") as f:
         html_text = f.read()
 
-    prod_map = {"product_a": "Продукт А", "product_b": "Продукт B", "product_c": "Продукт C"}
-    duration_map = {"1m": "1 месяц", "6m": "6 месяцев", "12m": "12 месяцев"}
+    # Используем общую карту длительностей
 
     # Обрабатываем order_number: добавляем нули в начало если меньше 6 символов
     order_number = data.get("order_number", "")
@@ -105,8 +129,8 @@ def fill_pdf_html(data: dict, submission_id: str) -> str:
         "{{short_number}}": html_lib.escape(short_number),
         "{{phone}}": html_lib.escape(data.get("phone", "")),
         "{{purchase_date}}": html_lib.escape(data.get("purchase_date", "")),
-        "{{product_name}}": html_lib.escape(prod_map.get(data.get("product", ""), "")),
-        "{{tariff}}": html_lib.escape(duration_map.get(data.get("duration", ""), "")),
+        "{{product_name}}": html_lib.escape(data.get("product_title") or PRODUCT_MAP.get(data.get("product", ""), "")),
+        "{{tariff}}": html_lib.escape(data.get("duration_title") or DURATION_MAP.get(data.get("duration", ""), "")),
         "{{number}}": html_lib.escape("#" + padded_order_number),
         "{{price}}": html_lib.escape(f"{formatted_cost} ₽"),
         "{{generation_time}}": html_lib.escape(datetime.datetime.now().strftime("%d/%m/%Y | %H:%M"))
@@ -123,30 +147,38 @@ def fill_pdf_html(data: dict, submission_id: str) -> str:
     return temp_html_path
 
 
-@dp.message(Command("create_invoice"))
+@dp.message(AdminOnly(), Command("create_invoice"))
 async def start(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Введите почту:")
     await state.set_state(Form.email)
 
-@dp.message(StateFilter(Form.email))
+@dp.message(AdminOnly(), StateFilter(Form.email))
 async def email(message: Message, state: FSMContext):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", message.text):
         await message.answer("Неверная почта, попробуйте снова.")
         return
     await state.update_data(email=message.text)
-    await message.answer("Выберите продукт:", reply_markup=product_kb())
+    await message.answer(
+        "Выберите продукт кнопкой ниже или введите название вручную:",
+        reply_markup=product_kb()
+    )
     await state.set_state(Form.product)
 
-@dp.callback_query()
+@dp.callback_query(AdminOnly(), StateFilter(Form.product, Form.duration, Form.confirm))
 async def callbacks(callback: CallbackQuery, state: FSMContext):
     data = callback.data
     if data.startswith("product:"):
-        await state.update_data(product=data.split(":")[1])
-        await callback.message.answer("Выберите продолжительность:", reply_markup=duration_kb())
+        product_code = data.split(":")[1]
+        await state.update_data(product=product_code, product_title=PRODUCT_MAP.get(product_code, product_code))
+        await callback.message.answer(
+            "Выберите продолжительность кнопкой ниже или введите вручную (например: 1 месяц):",
+            reply_markup=duration_kb()
+        )
         await state.set_state(Form.duration)
     elif data.startswith("duration:"):
-        await state.update_data(duration=data.split(":")[1])
+        duration_code = data.split(":")[1]
+        await state.update_data(duration=duration_code, duration_title=DURATION_MAP.get(duration_code, duration_code))
         await callback.message.answer("Введите имя:")
         await state.set_state(Form.name)
     elif data.startswith("confirm:"):
@@ -180,13 +212,17 @@ async def callbacks(callback: CallbackQuery, state: FSMContext):
             if success:
                 # Отправляем PDF файл
                 await callback.message.answer_document(FSInputFile(temp_pdf_path))
-                
-                # Удаляем временные файлы
-                try:
-                    os.remove(temp_html_path)
-                    os.remove(temp_pdf_path)
-                except OSError as e:
-                    logging.warning(f"Не удалось удалить временные файлы: {e}")
+
+                # Сохраним пути во временное состояние для следующего шага
+                await state.update_data(temp_html_path=temp_html_path, temp_pdf_path=temp_pdf_path)
+
+                # Предложим отправить файл на почту
+                email = d.get("email", "")
+                await callback.message.answer(
+                    f"Отправляем данный инвойс на указанную почту {email}?",
+                    reply_markup=email_confirm_kb()
+                )
+                await state.set_state(Form.send_email_confirm)
             else:
                 await callback.message.answer("Ошибка при генерации PDF. Попробуйте еще раз.")
                 # Удаляем временный HTML файл в случае ошибки
@@ -195,28 +231,108 @@ async def callbacks(callback: CallbackQuery, state: FSMContext):
                 except OSError:
                     pass
             
-            await state.clear()
+            # Не очищаем состояние при успехе до ответа пользователя
     await callback.answer()
 
-@dp.message(StateFilter(Form.name))
+@dp.callback_query(AdminOnly(), StateFilter(Form.send_email_confirm))
+async def send_email_callbacks(callback: CallbackQuery, state: FSMContext):
+    data = callback.data
+    if not data.startswith("sendmail:"):
+        await callback.answer()
+        return
+
+    st = await state.get_data()
+    temp_html_path = st.get("temp_html_path")
+    temp_pdf_path = st.get("temp_pdf_path")
+    email = st.get("email", "")
+
+    if data.endswith("no"):
+        # Очистка временных файлов
+        try:
+            if temp_html_path and os.path.exists(temp_html_path):
+                os.remove(temp_html_path)
+            if temp_pdf_path and os.path.exists(temp_pdf_path):
+                os.remove(temp_pdf_path)
+        except OSError as e:
+            logging.warning(f"Не удалось удалить временные файлы: {e}")
+        await callback.message.answer("Отправка на email отменена.")
+        await state.clear()
+        await callback.answer()
+        return
+
+    # data.endswith("yes")
+    if not temp_pdf_path or not os.path.exists(temp_pdf_path):
+        await callback.message.answer("Файл для отправки не найден. Попробуйте сгенерировать инвойс заново.")
+        await state.clear()
+        await callback.answer()
+        return
+
+    await bot.send_chat_action(callback.message.chat.id, ChatAction.TYPING)
+
+    ok = send_email_with_attachment(
+        file_path=temp_pdf_path,
+        body_text="Здравствуйте! Во вложении ваш счёт.",
+        recipient_email=email,
+    )
+    if ok:
+        await callback.message.answer("Письмо отправлено на указанную почту.")
+    else:
+        await callback.message.answer("Не удалось отправить письмо. Проверьте настройки почты и попробуйте снова.")
+
+    # Очистка временных файлов
+    try:
+        if temp_html_path and os.path.exists(temp_html_path):
+            os.remove(temp_html_path)
+        if temp_pdf_path and os.path.exists(temp_pdf_path):
+            os.remove(temp_pdf_path)
+    except OSError as e:
+        logging.warning(f"Не удалось удалить временные файлы: {e}")
+
+    await state.clear()
+    await callback.answer()
+
+@dp.message(AdminOnly(), StateFilter(Form.product))
+async def product_text_input(message: Message, state: FSMContext):
+    title = (message.text or "").strip()
+    if not title:
+        await message.answer("Пожалуйста, введите название продукта или выберите кнопку ниже.")
+        return
+    await state.update_data(product="custom", product_title=title)
+    await message.answer(
+        "Выберите продолжительность кнопкой ниже или введите вручную (например: 6 месяцев):",
+        reply_markup=duration_kb()
+    )
+    await state.set_state(Form.duration)
+
+@dp.message(AdminOnly(), StateFilter(Form.duration))
+async def duration_text_input(message: Message, state: FSMContext):
+    title = (message.text or "").strip()
+    if not title:
+        await message.answer("Пожалуйста, введите продолжительность или выберите кнопку ниже.")
+        return
+    await state.update_data(duration="custom", duration_title=title)
+    await message.answer("Введите имя:")
+    await state.set_state(Form.name)
+
+@dp.message(AdminOnly(), StateFilter(Form.name))
 async def name(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     await message.answer("Введите телефон:")
     await state.set_state(Form.phone)
 
-@dp.message(StateFilter(Form.phone))
+@dp.message(AdminOnly(), StateFilter(Form.phone))
 async def phone(message: Message, state: FSMContext):
     await state.update_data(phone=message.text)
     await message.answer("Введите номер заказа:")
     await state.set_state(Form.order_number)
 
-@dp.message(StateFilter(Form.order_number))
+@dp.message(AdminOnly(), StateFilter(Form.order_number))
 async def order(message: Message, state: FSMContext):
     await state.update_data(order_number=message.text)
     await message.answer("Введите дату покупки (ДД/ММ/ГГГГ):")
     await state.set_state(Form.purchase_date)
 
-@dp.message(StateFilter(Form.purchase_date))
+@dp.message(AdminOnly(), StateFilter(Form.purchase_date))
 async def date(message: Message, state: FSMContext):
     # Валидация формата даты ДД/ММ/ГГГГ
     date_pattern = r'^\d{2}/\d{2}/\d{4}$'
@@ -236,15 +352,18 @@ async def date(message: Message, state: FSMContext):
     await message.answer("Введите стоимость:")
     await state.set_state(Form.cost)
 
-@dp.message(StateFilter(Form.cost))
+@dp.message(AdminOnly(), StateFilter(Form.cost))
 async def cost(message: Message, state: FSMContext):
     await state.update_data(cost=message.text)
     data = await state.get_data()
+    # Читаемые названия продукта и длительности
+    product_title = data.get('product_title') or PRODUCT_MAP.get(data.get('product', ''), data.get('product', ''))
+    duration_title = data.get('duration_title') or DURATION_MAP.get(data.get('duration', ''), data.get('duration', ''))
     await message.answer(
         f"Подтвердите данные:\n"
         f"Email: {data.get('email')}\n"
-        f"Продукт: {data.get('product')}\n"
-        f"Продолжительность: {data.get('duration')}\n"
+        f"Продукт: {product_title}\n"
+        f"Продолжительность: {duration_title}\n"
         f"Имя: {data.get('name')}\n"
         f"Телефон: {data.get('phone')}\n"
         f"Заказ: {data.get('order_number')}\n"
@@ -257,6 +376,20 @@ async def cost(message: Message, state: FSMContext):
 
 if __name__ == "__main__":
     async def main():
+        # Catch-all для админов: подсказка по использованию
+        @dp.message(AdminOnly())
+        async def admin_hint(message: Message):
+            await message.answer("Воспользуйтесь командами /create_invoice")
+
+        # Catch-all для не-админов: отказ в доступе
+        @dp.message(NonAdminOnly())
+        async def not_allowed_message(message: Message):
+            await message.answer("Вы не можете пользоваться этим ботом. Обратитесь к разработчику для предоставления доступа.")
+
+        @dp.callback_query(NonAdminOnly())
+        async def not_allowed_callback(callback: CallbackQuery):
+            await callback.message.answer("Вы не можете пользоваться этим ботом. Обратитесь к разработчику для предоставления доступа.")
+            await callback.answer()
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
     asyncio.run(main())

@@ -2,3 +2,4 @@
 playwright>=1.40.0
 aiogram==3.22
 python-dotenv==1.0.1
+certifi==2025.8.3

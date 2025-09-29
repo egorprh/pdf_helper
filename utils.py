@@ -34,6 +34,7 @@ import mimetypes
 import os
 import smtplib
 import ssl
+import certifi
 from email.message import EmailMessage
 from pathlib import Path
 from typing import Optional
@@ -45,19 +46,6 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 
-
-def _get_env(name: str, default: Optional[str] = None) -> Optional[str]:
-    """Безопасно получить переменную окружения с возможным значением по умолчанию.
-
-    Возвращает строку или None, если переменная не найдена и значение
-    по умолчанию не задано.
-    """
-
-    value = os.environ.get(name, default)
-    # Уберём пустые строки, считая их отсутствующими.
-    if isinstance(value, str) and value.strip() == "":
-        return default
-    return value
 
 
 def send_email_with_attachment(file_path: str, body_text: str, recipient_email: str) -> bool:
@@ -95,11 +83,11 @@ def send_email_with_attachment(file_path: str, body_text: str, recipient_email: 
             return False
 
         # Прочитаем конфигурацию из окружения
-        gmail_user = _get_env("GMAIL_USER")
-        gmail_app_password = _get_env("GMAIL_APP_PASSWORD")
-        smtp_host = _get_env("SMTP_HOST", "smtp.gmail.com")
+        gmail_user = os.getenv("GMAIL_USER")
+        gmail_app_password = os.getenv("GMAIL_APP_PASSWORD")
+        smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
         # Порт по умолчанию для SSL
-        smtp_port_str = _get_env("SMTP_PORT", "465")
+        smtp_port_str = os.getenv("SMTP_PORT", "465")
 
         if not gmail_user or not gmail_app_password:
             logging.error(
@@ -143,8 +131,9 @@ def send_email_with_attachment(file_path: str, body_text: str, recipient_email: 
             filename=file_path_obj.name,
         )
 
-        # Настроим защищённое SSL‑подключение и отправим письмо
-        ssl_context = ssl.create_default_context()
+        # Настроим защищённое SSL‑подключение и отправим письмо.
+        # Явно используем сертификаты из certifi для надёжной валидации на macOS/Python.
+        ssl_context = ssl.create_default_context(cafile=certifi.where())
         try:
             with smtplib.SMTP_SSL(host=smtp_host, port=smtp_port, context=ssl_context) as smtp:
                 smtp.login(gmail_user, gmail_app_password)
