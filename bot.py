@@ -18,15 +18,15 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.storage.memory import MemoryStorage
 
 import asyncio
-from render_pdf import html_to_pdf_playwright
-from utils import send_email_with_attachment
+from utils.render_pdf import html_to_pdf_playwright
+from utils.utils import send_email_with_attachment
 from filters.admin_only import AdminOnly, NonAdminOnly
 
 
 logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
-PDF_HTML_PATH = "pdf.html"
+PDF_HTML_PATH = "html/pdf.html"
 
 # Единая карта кодов продуктов к человеческим названиям
 PRODUCT_MAP = {
@@ -139,8 +139,8 @@ def fill_pdf_html(data: dict, submission_id: str) -> str:
     for placeholder, value in replacements.items():
         html_text = html_text.replace(placeholder, value)
     
-    # Создаем временный HTML файл
-    temp_html_path = f"temp_invoice_{submission_id}.html"
+    # Создаем временный HTML файл внутри html/ чтобы относительные пути к ресурсам оставались валидными
+    temp_html_path = f"html/temp_invoice_{submission_id}.html"
     with open(temp_html_path, "w", encoding="utf-8") as f:
         f.write(html_text)
     
@@ -206,7 +206,7 @@ async def callbacks(callback: CallbackQuery, state: FSMContext):
             success = await html_to_pdf_playwright(
                 html_file_path=temp_html_path,
                 output_pdf_path=temp_pdf_path,
-                css_file_path="styles.css"
+                css_file_path="html/styles.css"
             )
             
             if success:

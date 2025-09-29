@@ -96,7 +96,7 @@ async def main():
     
     # Пути к файлам
     html_file = "html/pdf.html"
-    css_file = "html/styles.css"
+    css_file = "styles.css"
     output_pdf = "html/invoice.pdf"
     
     # Получаем абсолютные пути
