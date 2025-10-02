@@ -5,7 +5,7 @@ from playwright.async_api import async_playwright
 
 
 async def html_to_image(html_file_path: str, output_path: str = None, 
-                       selector: str = 'div[data-testid="inLand"]', width: int = 1200, height: int = None) -> str:
+                       selector: str = 'div[id="dept_img_trade"]', width: int = 1200, height: int = None) -> str:
     """
     Конвертирует HTML файл в изображение высокого качества.
     
@@ -13,7 +13,7 @@ async def html_to_image(html_file_path: str, output_path: str = None,
         html_file_path (str): Путь к HTML файлу
         output_path (str, optional): Путь для сохранения изображения. Если не указан, 
                                    сохраняется рядом с HTML файлом с расширением .png
-        selector (str): CSS селектор элемента для скриншота (по умолчанию div[data-testid="inLand"])
+        selector (str): CSS селектор элемента для скриншота (по умолчанию div[id="dept_img_trade"])
         width (int): Ширина viewport браузера (по умолчанию 1200)
         height (int, optional): Высота viewport браузера. Если не указана, подстраивается под контент
     
@@ -69,9 +69,30 @@ async def html_to_image(html_file_path: str, output_path: str = None,
                 raise Exception(f"Элемент с селектором '{selector}' не найден")
             
             # Делаем скриншот элемента
-            await element.screenshot(
+            loc = page.locator(selector)
+            box = await loc.bounding_box()
+            # может вернуть None до рендера — подождём появления и стабильности
+            await loc.wait_for(state="visible")
+
+            # округляем клип так, чтобы не было «щели» справа/снизу
+            from math import floor, ceil
+            clip = {
+                "x": floor(box["x"]),
+                "y": floor(box["y"]),
+                "width": ceil(box["width"]),
+                "height": ceil(box["height"]),
+            }
+
+            # фон страницы сделаем тёмным и уберём возможные отступы
+            await page.add_style_tag(content="""
+                html,body{margin:0;padding:0;background:#000;}
+            """)
+
+            await page.screenshot(
                 path=str(output_path),
-                type='png'
+                scale='device',
+                type='png',
+                clip=clip,
             )
             
             print(f"Изображение успешно сохранено: {output_path}")

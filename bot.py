@@ -13,7 +13,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 import asyncio
 from filters.admin_only import AdminOnly, NonAdminOnly
-from handlers import create_invoice_router, plug_router
+from handlers import create_invoice_router, plug_router, trade_share_router
 
 
 logging.basicConfig(level=logging.INFO)
@@ -29,6 +29,7 @@ dp = Dispatcher(storage=storage)
 
 # Подключаем роутеры
 dp.include_router(create_invoice_router)  # Основные команды
+dp.include_router(trade_share_router)  # Шеринг сделок /okx
 dp.include_router(plug_router)  # Заглушки (подключаем последним)
 
 
