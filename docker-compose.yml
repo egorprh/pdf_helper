@@ -1,0 +1,45 @@
+services:
+  pdf-sender-bot:
+    build: .
+    container_name: pdf-sender-bot
+    restart: always
+    environment:
+      # Telegram Bot Token (обязательно)
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      
+      # Gmail SMTP настройки (опционально)
+      - GMAIL_USER=${GMAIL_USER:-}
+      - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD:-}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      
+      # Настройки для Playwright
+      - DISPLAY=:99
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+    volumes:
+      # Монтируем весь проект (кроме venv и временных файлов)
+      - .:/app:ro
+      
+      # Временная директория для генерации файлов
+      - temp_files:/app/temp
+    env_file:
+      - .env
+    networks:
+      - bot-network
+    # Ограничения ресурсов (увеличены для Playwright + PDF генерации)
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+volumes:
+  temp_files:
+    driver: local
+
+networks:
+  bot-network:
+    driver: bridge

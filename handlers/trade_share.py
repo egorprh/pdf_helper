@@ -103,8 +103,7 @@ async def handle_okx_share(message: Message, bot: Bot):
         temp_html.write_text(html_text, encoding="utf-8")
 
         # Рендерим изображение
-        output_dir = project_root / "output"
-        output_dir.mkdir(parents=True, exist_ok=True)
+        output_dir = project_root / "temp"
         output_image_path = output_dir / f"{pair}_{position_lower}.png"
 
         await bot.send_chat_action(message.chat.id, ChatAction.UPLOAD_PHOTO)

@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 # Загружаем .env ПЕРВЫМ, до всех остальных импортов
 load_dotenv()
 
+# Создаем директорию для временных файлов при запуске
+os.makedirs("temp", exist_ok=True)
+
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message, CallbackQuery
 from aiogram.enums import ParseMode

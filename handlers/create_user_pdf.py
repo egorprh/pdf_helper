@@ -103,10 +103,7 @@ async def handle_uploaded_file(message: Message, state: FSMContext, bot: Bot):
     
     # Создаем временный файл
     temp_filename = f"temp_uploaded_{uuid.uuid4().hex}.pdf"
-    temp_path = f"output/{temp_filename}"
-    
-    # Создаем директорию output если её нет
-    os.makedirs("output", exist_ok=True)
+    temp_path = f"temp/{temp_filename}"
     
     # Скачиваем файл
     await bot.download_file(file.file_path, temp_path)
@@ -143,7 +140,7 @@ async def process_pdf_creation(message_or_callback, state: FSMContext, bot: Bot)
     try:
         # Создаем титульную страницу
         temp_html_path = fill_title_html(user_name)
-        title_pdf_path = f"output/title_{uuid.uuid4().hex}.pdf"
+        title_pdf_path = f"temp/title_{uuid.uuid4().hex}.pdf"
         
         # Конвертируем HTML в PDF с альбомной ориентацией
         success = await html_to_pdf_playwright(
@@ -160,7 +157,7 @@ async def process_pdf_creation(message_or_callback, state: FSMContext, bot: Bot)
             return
         
         # Объединяем PDF файлы
-        final_pdf_path = f"output/final_{uuid.uuid4().hex}.pdf"
+        final_pdf_path = f"temp/final_{uuid.uuid4().hex}.pdf"
         merge_success = merge_pdfs(title_pdf_path, pdf_path, final_pdf_path)
         
         if not merge_success:

@@ -84,7 +84,7 @@ async def callbacks(callback: CallbackQuery, state: FSMContext, bot: Bot):
             temp_html_path = fill_pdf_html(d, submission_id, PDF_HTML_PATH)
             
             # Создаем путь для PDF файла с правильным именем
-            temp_pdf_path = f"invoice_{padded_order_number}.pdf"
+            temp_pdf_path = f"temp/invoice_{padded_order_number}.pdf"
             
             # Конвертируем HTML в PDF
             success = await html_to_pdf_playwright(
