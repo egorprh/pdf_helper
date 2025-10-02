@@ -95,13 +95,13 @@
               <div class="index_photoWrp__lDvIn">
                 <picture class="okui-image tc-avatar-img index_photo__Qf-2G dark hideBorder">
                   <source class="okui-image-picture-sizer" style="padding-top: 100%;"><img
-                    class="okui-image-layout okui-image-layout-responsive" alt="kak***@mail.ru"
+                    class="okui-image-layout okui-image-layout-responsive" alt="department"
                     src="./assets/0018(1).png">
                 </picture>
               </div>
               <div class="index_nickName__IGVL9">
                 <div class="index_nameBox__y+4F2">
-                  <p class="index_title__FVPqB">kak***@mail.ru</p><span class="index_vipDep__bMBGI">|</span><span
+                  <p class="index_title__FVPqB">department</p><span class="index_vipDep__bMBGI">|</span><span
                     class="index_vipIcon__CI8g3">VIP</span>
                 </div>
               </div>
@@ -110,9 +110,14 @@
           </div>
           <div><img alt="" class="index_shareLogo__GfkvX" src="./assets/53C363E86238B944.png">
             <div data-testid="plRatio" class="index_profitContainer__zMI0t index_textRed__WoQAl">
-              <div class="index_profitValue__2wOQA"><span class="index_profitText__XpTqM">-5,53</span><span>%</span>
+              <div class="index_profitValue__2wOQA">
+                <span class="index_profitText__XpTqM">{profit_percentage}</span><span>%</span>
+              </div>
+              <div class="index_profitValue__2wOQA" style="font-size: 0.9em; padding-top: 5px;">
+                <span class="index_profitText__amount">{profit_amount} <span style="color: #ffffff;">USDT</span></span> 
               </div>
             </div>
+            
             <div data-testid="shareTitle" class="index_instCon__VCuus">
               <div class="CoinIcons_titleLeft__YZ6JO">
                 <picture class="okui-picture CoinIcons_coinIcon__1ECgT okui-picture-font">
@@ -121,19 +126,19 @@
                 </picture>
               </div>
               <div>
-                <div class="index_instTitle__KVHVR"><span>BTCUSDT Бессрочные</span></div>
+                <div class="index_instTitle__KVHVR"><span>{pair} Бессрочные</span></div>
                 <div class="index_pRatioTag__fNOob">
-                  <div class="index_split__WUz09">Лонг</div>
-                  <div class="index_split__WUz09">100x</div>
+                  <div class="index_split__WUz09">{position_type}</div>
+                  <div class="index_split__WUz09">{leverage}x</div>
                   <div class="index_split__WUz09">Закрыто</div>
                 </div>
               </div>
             </div>
             <div data-testid="extInfo" class="index_pricesContainer__GyxwE">
               <div class="index_priceTitle__q5emW">Входная цена</div>
-              <div class="index_priceValue__fDAWc">₮114&nbsp;962,0</div>
+              <div class="index_priceValue__fDAWc">$ {entry_price}</div>
               <div class="index_priceTitle__q5emW">Цена выхода</div>
-              <div class="index_priceValue__fDAWc">₮114&nbsp;956,0</div>
+              <div class="index_priceValue__fDAWc">$ {exit_price}</div>
             </div>
           </div>
         </div><img class="index_inlandBg__xwH4v" alt="" src="./assets/334C6DB235C45ED6.png">
