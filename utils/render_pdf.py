@@ -95,9 +95,9 @@ async def main():
     """Основная функция для демонстрации."""
     
     # Пути к файлам
-    html_file = "html/pdf.html"
-    css_file = "styles.css"
-    output_pdf = "html/invoice.pdf"
+    html_file = "invoice_html/pdf.html"
+    css_file = "invoice_html/styles.css"
+    output_pdf = "invoice_html/invoice.pdf"
     
     # Получаем абсолютные пути
     current_dir = os.path.dirname(os.path.abspath(__file__))

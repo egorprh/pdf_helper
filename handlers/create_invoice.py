@@ -27,14 +27,14 @@ keyboards = InvoiceKeyboards(PRODUCT_MAP, DURATION_MAP)
 @create_invoice_router.message(AdminOnly(), Command("create_invoice"))
 async def start(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer("Введите почту:")
+    await message.answer("Введите почту:", reply_markup=keyboards.cancel_kb())
     await state.set_state(Form.email)
 
 
 @create_invoice_router.message(AdminOnly(), StateFilter(Form.email))
 async def email(message: Message, state: FSMContext):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", message.text):
-        await message.answer("Неверная почта, попробуйте снова.")
+        await message.answer("Неверная почта, попробуйте снова.", reply_markup=keyboards.cancel_kb())
         return
     await state.update_data(email=message.text)
     await message.answer(
@@ -47,7 +47,12 @@ async def email(message: Message, state: FSMContext):
 @create_invoice_router.callback_query(AdminOnly(), StateFilter(Form.product, Form.duration, Form.confirm))
 async def callbacks(callback: CallbackQuery, state: FSMContext, bot: Bot):
     data = callback.data
-    if data.startswith("product:"):
+    if data == "cancel":
+        await callback.message.answer("❌ Создание инвойса отменено.")
+        await state.clear()
+        await callback.answer()
+        return
+    elif data.startswith("product:"):
         product_code = data.split(":")[1]
         await state.update_data(product=product_code, product_title=PRODUCT_MAP.get(product_code, product_code))
         await callback.message.answer(
@@ -58,7 +63,7 @@ async def callbacks(callback: CallbackQuery, state: FSMContext, bot: Bot):
     elif data.startswith("duration:"):
         duration_code = data.split(":")[1]
         await state.update_data(duration=duration_code, duration_title=DURATION_MAP.get(duration_code, duration_code))
-        await callback.message.answer("Введите имя:")
+        await callback.message.answer("Введите имя:", reply_markup=keyboards.cancel_kb())
         await state.set_state(Form.name)
     elif data.startswith("confirm:"):
         if data.endswith("no"):
@@ -85,7 +90,7 @@ async def callbacks(callback: CallbackQuery, state: FSMContext, bot: Bot):
             success = await html_to_pdf_playwright(
                 html_file_path=temp_html_path,
                 output_pdf_path=temp_pdf_path,
-                css_file_path="html/styles.css"
+                css_file_path="invoice_html/styles.css"
             )
             
             if success:
@@ -172,11 +177,20 @@ async def send_email_callbacks(callback: CallbackQuery, state: FSMContext, bot: 
     await callback.answer()
 
 
+@create_invoice_router.callback_query(AdminOnly(), StateFilter(Form.email, Form.name, Form.phone, Form.order_number, Form.purchase_date, Form.cost))
+async def cancel_callback(callback: CallbackQuery, state: FSMContext):
+    """Обработчик кнопки отмены для всех состояний ввода данных"""
+    if callback.data == "cancel":
+        await callback.message.answer("❌ Создание инвойса отменено.")
+        await state.clear()
+    await callback.answer()
+
+
 @create_invoice_router.message(AdminOnly(), StateFilter(Form.product))
 async def product_text_input(message: Message, state: FSMContext):
     title = (message.text or "").strip()
     if not title:
-        await message.answer("Пожалуйста, введите название продукта или выберите кнопку ниже.")
+        await message.answer("Пожалуйста, введите название продукта или выберите кнопку ниже.", reply_markup=keyboards.product_kb())
         return
     await state.update_data(product="custom", product_title=title)
     await message.answer(
@@ -190,31 +204,31 @@ async def product_text_input(message: Message, state: FSMContext):
 async def duration_text_input(message: Message, state: FSMContext):
     title = (message.text or "").strip()
     if not title:
-        await message.answer("Пожалуйста, введите продолжительность или выберите кнопку ниже.")
+        await message.answer("Пожалуйста, введите продолжительность или выберите кнопку ниже.", reply_markup=keyboards.duration_kb())
         return
     await state.update_data(duration="custom", duration_title=title)
-    await message.answer("Введите имя:")
+    await message.answer("Введите имя:", reply_markup=keyboards.cancel_kb())
     await state.set_state(Form.name)
 
 
 @create_invoice_router.message(AdminOnly(), StateFilter(Form.name))
 async def name(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
-    await message.answer("Введите телефон:")
+    await message.answer("Введите телефон:", reply_markup=keyboards.cancel_kb())
     await state.set_state(Form.phone)
 
 
 @create_invoice_router.message(AdminOnly(), StateFilter(Form.phone))
 async def phone(message: Message, state: FSMContext):
     await state.update_data(phone=message.text)
-    await message.answer("Введите номер заказа:")
+    await message.answer("Введите номер заказа:", reply_markup=keyboards.cancel_kb())
     await state.set_state(Form.order_number)
 
 
 @create_invoice_router.message(AdminOnly(), StateFilter(Form.order_number))
 async def order(message: Message, state: FSMContext):
     await state.update_data(order_number=message.text)
-    await message.answer("Введите дату покупки (ДД/ММ/ГГГГ):")
+    await message.answer("Введите дату покупки (ДД/ММ/ГГГГ):", reply_markup=keyboards.cancel_kb())
     await state.set_state(Form.purchase_date)
 
 
@@ -223,7 +237,7 @@ async def date(message: Message, state: FSMContext):
     # Валидация формата даты ДД/ММ/ГГГГ
     date_pattern = r'^\d{2}/\d{2}/\d{4}$'
     if not re.match(date_pattern, message.text):
-        await message.answer("Неверный формат даты. Введите дату в формате ДД/ММ/ГГГГ (например: 25/12/2023):")
+        await message.answer("Неверный формат даты. Введите дату в формате ДД/ММ/ГГГГ (например: 25/12/2023):", reply_markup=keyboards.cancel_kb())
         return
     
     # Дополнительная проверка корректности даты
@@ -231,11 +245,11 @@ async def date(message: Message, state: FSMContext):
         day, month, year = message.text.split('/')
         datetime.datetime(int(year), int(month), int(day))
     except ValueError:
-        await message.answer("Неверная дата. Проверьте правильность введенной даты:")
+        await message.answer("Неверная дата. Проверьте правильность введенной даты:", reply_markup=keyboards.cancel_kb())
         return
     
     await state.update_data(purchase_date=message.text)
-    await message.answer("Введите стоимость:")
+    await message.answer("Введите стоимость:", reply_markup=keyboards.cancel_kb())
     await state.set_state(Form.cost)
 
 

@@ -1,7 +1,7 @@
 # Константы для создания инвойсов
 
 # Путь к HTML шаблону PDF
-PDF_HTML_PATH = "html/pdf.html"
+PDF_HTML_PATH = "invoice_html/pdf.html"
 
 # Единая карта кодов продуктов к человеческим названиям
 PRODUCT_MAP = {

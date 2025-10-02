@@ -11,7 +11,7 @@ plug_router = Router()
 @plug_router.message(AdminOnly())
 async def admin_hint(message: Message):
     """Catch-all для админов: подсказка по использованию"""
-    await message.answer("Воспользуйтесь командами /create_invoice и /okx. Пример: <code>/okx SOLUSDT Шорт 50,00x +25,31 +2531,3 165,90 165,06</code>")
+    await message.answer("Воспользуйтесь командами /create_invoice и /okx.<br>Пример: <code>/okx SOLUSDT Шорт 50,00x +25,31 +2531,3 165,90 165,06</code>")
 
 
 @plug_router.message(NonAdminOnly())

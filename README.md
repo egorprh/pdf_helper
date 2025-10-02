@@ -3,7 +3,7 @@
 Телеграм‑бот, который собирает данные у пользователя, генерирует PDF‑счёт из HTML через Playwright и отправляет готовый PDF в чат. В проект также входит утилита для самостоятельной конвертации HTML→PDF и модуль отправки писем через Gmail SMTP (опционально).
 
 ### Основные возможности
-- Генерация PDF из шаблона `html/pdf.html` со стилями из `html/styles.css` и локальными ассетами в `html/assets/`
+- Генерация PDF из шаблона `invoice_html/pdf.html` со стилями из `invoice_html/styles.css` и локальными ассетами в `invoice_html/assets/`
 - Сбор данных в чате Telegram по шагам (email → продукт → срок → имя → телефон → номер заказа → дата → сумма)
 - Подтверждение введённых данных и отправка PDF‑файла в чат
 - Отдельный скрипт конвертации HTML→PDF (`render_pdf.py`)
@@ -15,10 +15,10 @@
 - `bot.py` — Telegram‑бот на `aiogram`, генерирует PDF и отправляет его пользователю
 - `render_pdf.py` — пример самостоятельной конвертации HTML→PDF с настройками под полный A4
 - `utils.py` — отправка писем с вложением через Gmail SMTP (опционально)
-- `html/pdf.html` — HTML‑шаблон счёта с элементами, заполняемыми по `id`
-- `html/styles.css` — стили для PDF‑страницы (A4, шрифты, сетки и пр.)
-- `html/assets/` — изображения и иконки, используемые в шаблоне
-- `html/fonts/` — локальные шрифты SF Pro Display (woff/woff2)
+- `invoice_html/pdf.html` — HTML‑шаблон счёта с элементами, заполняемыми по `id`
+- `invoice_html/styles.css` — стили для PDF‑страницы (A4, шрифты, сетки и пр.)
+- `invoice_html/assets/` — изображения и иконки, используемые в шаблоне
+- `invoice_html/fonts/` — локальные шрифты SF Pro Display (woff/woff2)
 - `requirements.txt` — базовые зависимости (Playwright)
 
 ---
@@ -103,15 +103,15 @@ python bot.py
 ```bash
 python render_pdf.py
 ```
-По умолчанию читается `html/pdf.html` и создаётся `html/invoice.pdf`. Скрипт настраивает печать под полный A4 (без внешних отступов, с `print_background=True`).
+По умолчанию читается `invoice_html/pdf.html` и создаётся `invoice_html/invoice.pdf`. Скрипт настраивает печать под полный A4 (без внешних отступов, с `print_background=True`).
 
 ---
 
 ## Кастомизация шаблона PDF
-- Редактируйте `html/pdf.html` и `html/styles.css`
-- Изображения храните в `html/assets/` и подключайте через `<img src="assets/...">`
+- Редактируйте `invoice_html/pdf.html` и `invoice_html/styles.css`
+- Изображения храните в `invoice_html/assets/` и подключайте через `<img src="assets/...">`
 - Для корректной замены значений используйте элементы с предсказуемыми `id` (см. список выше)
-- Шрифты уже подключены из каталога `html/fonts/`
+- Шрифты уже подключены из каталога `invoice_html/fonts/`
 
 ---
 
@@ -121,7 +121,7 @@ python render_pdf.py
 from utils import send_email_with_attachment
 
 ok = send_email_with_attachment(
-    file_path="/absolute/path/to/html/invoice.pdf",
+    file_path="/absolute/path/to/invoice_html/invoice.pdf",
     body_text="Здравствуйте! Во вложении ваш счёт.",
     recipient_email="client@example.com",
 )
@@ -142,7 +142,7 @@ print("Отправлено" if ok else "Не отправлено")
   - Убедитесь, что команда в коде — `/crate` (именно так), либо измените её в `bot.py`
 
 - Неверные данные в PDF
-  - Проверьте соответствие `id` в `html/pdf.html` и ключей, которые подставляет `fill_pdf_html`
+  - Проверьте соответствие `id` в `invoice_html/pdf.html` и ключей, которые подставляет `fill_pdf_html`
   - Убедитесь, что даты/стоимость вводятся в ожидаемом формате
 
 - Ошибки с Gmail SMTP

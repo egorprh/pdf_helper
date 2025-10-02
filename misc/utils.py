@@ -51,8 +51,8 @@ def fill_pdf_html(data: dict, submission_id: str, pdf_html_path: str) -> str:
     for placeholder, value in replacements.items():
         html_text = html_text.replace(placeholder, value)
     
-    # Создаем временный HTML файл внутри html/ чтобы относительные пути к ресурсам оставались валидными
-    temp_html_path = f"html/temp_invoice_{submission_id}.html"
+    # Создаем временный HTML файл внутри invoice_html/ чтобы относительные пути к ресурсам оставались валидными
+    temp_html_path = f"invoice_html/temp_invoice_{submission_id}.html"
     with open(temp_html_path, "w", encoding="utf-8") as f:
         f.write(html_text)
     

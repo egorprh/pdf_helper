@@ -14,6 +14,7 @@ class InvoiceKeyboards:
         builder = InlineKeyboardBuilder()
         for code, title in self.product_map.items():
             builder.row(InlineKeyboardButton(text=title, callback_data=f"product:{code}"))
+        builder.row(InlineKeyboardButton(text="❌ Отменить", callback_data="cancel"))
         return builder.as_markup()
     
     def duration_kb(self):
@@ -21,6 +22,7 @@ class InvoiceKeyboards:
         builder = InlineKeyboardBuilder()
         for code, title in self.duration_map.items():
             builder.row(InlineKeyboardButton(text=title, callback_data=f"duration:{code}"))
+        builder.row(InlineKeyboardButton(text="❌ Отменить", callback_data="cancel"))
         return builder.as_markup()
     
     def confirm_kb(self):
@@ -37,4 +39,10 @@ class InvoiceKeyboards:
             InlineKeyboardButton(text="Да", callback_data="sendmail:yes"),
             InlineKeyboardButton(text="Нет", callback_data="sendmail:no")
         )
+        return builder.as_markup()
+    
+    def cancel_kb(self):
+        """Клавиатура с кнопкой отмены"""
+        builder = InlineKeyboardBuilder()
+        builder.row(InlineKeyboardButton(text="❌ Отменить", callback_data="cancel"))
         return builder.as_markup()
