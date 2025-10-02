@@ -46,3 +46,20 @@ class InvoiceKeyboards:
         builder = InlineKeyboardBuilder()
         builder.row(InlineKeyboardButton(text="❌ Отменить", callback_data="cancel"))
         return builder.as_markup()
+
+
+class UserPdfKeyboards:
+    """Класс для создания инлайн клавиатур для создания пользовательского PDF"""
+    
+    def file_choice_kb(self):
+        """Клавиатура для выбора файла"""
+        builder = InlineKeyboardBuilder()
+        builder.row(InlineKeyboardButton(text="📄 Использовать существующий", callback_data="use_existing"))
+        builder.row(InlineKeyboardButton(text="❌ Отменить", callback_data="cancel"))
+        return builder.as_markup()
+    
+    def cancel_kb(self):
+        """Клавиатура с кнопкой отмены"""
+        builder = InlineKeyboardBuilder()
+        builder.row(InlineKeyboardButton(text="❌ Отменить", callback_data="cancel"))
+        return builder.as_markup()

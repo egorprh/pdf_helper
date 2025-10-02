@@ -14,3 +14,8 @@ class Form(StatesGroup):
     send_email_confirm = State()
 
 
+class UserPdfForm(StatesGroup):
+    user_name = State()
+    pdf_file = State()
+
+

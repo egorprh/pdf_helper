@@ -9,13 +9,14 @@ from playwright.async_api import async_playwright
 import os
 from pathlib import Path
 
-async def html_to_pdf_playwright(html_file_path: str, output_pdf_path: str, css_file_path: str = None) -> bool:
+async def html_to_pdf_playwright(html_file_path: str, output_pdf_path: str, css_file_path: str = None, landscape: bool = False) -> bool:
     """Преобразовать HTML файл в PDF с максимальным использованием A4.
     
     Аргументы:
         html_file_path: Путь к HTML файлу для преобразования.
         output_pdf_path: Путь для сохранения результирующего PDF файла.
         css_file_path: Опциональный путь к CSS файлу для стилизации.
+        landscape: Если True, использует альбомную ориентацию.
     
     Возвращает:
         True, если PDF успешно создан; False, если произошла ошибка.
@@ -63,6 +64,7 @@ async def html_to_pdf_playwright(html_file_path: str, output_pdf_path: str, css_
             pdf_options = {
                 'path': str(output_path),
                 'format': 'A4',
+                'landscape': landscape,  # Альбомная ориентация
                 'margin': {
                     'top': '0',
                     'right': '0',

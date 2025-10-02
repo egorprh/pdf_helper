@@ -16,3 +16,7 @@ DURATION_MAP = {
     "3m": "3 месяца",
     "12m": "12 месяцев",
 }
+
+# Константы для создания пользовательского PDF
+DEFAULT_PDF_PATH = "pdf_title/Персональная_программа_обучения_D_Space.pdf"
+TITLE_HTML_PATH = "pdf_title/title_page.html"

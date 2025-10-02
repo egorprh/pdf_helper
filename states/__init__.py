@@ -1,5 +1,5 @@
-from .form import Form
+from .form import Form, UserPdfForm
 
-__all__ = ["Form"]
+__all__ = ["Form", "UserPdfForm"]
 
 

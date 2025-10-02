@@ -57,3 +57,72 @@ def fill_pdf_html(data: dict, submission_id: str, pdf_html_path: str) -> str:
         f.write(html_text)
     
     return temp_html_path
+
+
+def fill_title_html(user_name: str) -> str:
+    """Создает временный HTML файл с подстановкой имени пользователя"""
+    import uuid
+    import datetime
+    from .constants import TITLE_HTML_PATH
+    
+    with open(TITLE_HTML_PATH, "r", encoding="utf-8") as f:
+        html_text = f.read()
+
+    # Заменяем шаблоны
+    replacements = {
+        "{{course_title}}": "Персональная программа обучения D-Space",
+        "{{customer_name}}": user_name,
+        "{{creation_date}}": datetime.datetime.now().strftime("%d.%m.%Y")
+    }
+
+    for placeholder, value in replacements.items():
+        html_text = html_text.replace(placeholder, value)
+    
+    # Создаем временный HTML файл
+    temp_html_path = f"pdf_title/temp_title_{uuid.uuid4().hex}.html"
+    with open(temp_html_path, "w", encoding="utf-8") as f:
+        f.write(html_text)
+    
+    return temp_html_path
+
+
+def merge_pdfs(title_pdf_path: str, main_pdf_path: str, output_path: str) -> bool:
+    """Объединяет титульную страницу с основным PDF"""
+    import logging
+    import PyPDF2
+    
+    try:
+        with open(title_pdf_path, 'rb') as title_file, open(main_pdf_path, 'rb') as main_file:
+            title_reader = PyPDF2.PdfReader(title_file)
+            main_reader = PyPDF2.PdfReader(main_file)
+            writer = PyPDF2.PdfWriter()
+
+            # Добавляем титульную страницу
+            if title_reader.pages:
+                writer.add_page(title_reader.pages[0])
+
+            # Добавляем все страницы основного PDF
+            for page in main_reader.pages:
+                writer.add_page(page)
+
+            # Сохраняем объединенный PDF
+            with open(output_path, 'wb') as output_file:
+                writer.write(output_file)
+        
+        return True
+    except Exception as e:
+        logging.error(f"Ошибка при объединении PDF: {e}")
+        return False
+
+
+def cleanup_files(file_paths: list):
+    """Удаляет временные файлы"""
+    import os
+    import logging
+    
+    for file_path in file_paths:
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except OSError as e:
+            logging.warning(f"Не удалось удалить файл {file_path}: {e}")
