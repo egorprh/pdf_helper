@@ -10,6 +10,7 @@ from aiogram.enums import ChatAction
 
 from filters.admin_only import AdminOnly
 from utils.html_to_image import html_to_image
+from datetime import datetime
 
 
 # Роутер для шеринга сделок
@@ -34,8 +35,8 @@ async def handle_okx_share(message: Message, bot: Bot):
     """Обработка команды /okx
 
     Формат (space-separated):
-    /okx <pair> <position_type> <leverage>x <profit_pct> <profit_amount> <entry_price> <exit_price>
-    Пример: /okx SOLUSDT Шорт 50,00x +25,31 +2531,3 165,90 165,06
+    /okx <pair> <position_type> <leverage>x <profit_pct> <profit_amount> <entry_price> <exit_price> <share_date> <share_time>
+    Пример: /okx SOLUSDT Шорт 50,00x +25,31 +2531,3 165,90 165,06 01.10.2025 15:26:49
     """
     text = message.text or ""
 
@@ -47,10 +48,10 @@ async def handle_okx_share(message: Message, bot: Bot):
 
     tokens = _normalize_tokens(content)
 
-    # Ожидаем минимум 7 токенов
+    # Ожидаем минимум 7 токенов (без даты/времени). 9 токенов, если дата и время переданы явно
     if len(tokens) < 7:
         await message.answer(
-            "Неверный формат. Пример: <code>/okx SOLUSDT Шорт 50,00x +25,31 +2531,3 165,90 165,06</code>"
+            "Неверный формат. Пример: <code>/okx SOLUSDT Шорт 50,00x +25,31 +2531,3 165,90 165,06 01.10.2025 15:26:49</code>"
         )
         return
 
@@ -61,6 +62,17 @@ async def handle_okx_share(message: Message, bot: Bot):
     profit_amount = tokens[4]
     entry_price = tokens[5]
     exit_price = tokens[6]
+
+    # Дата/время шеринга: если не переданы, подставим текущее локальное время
+    share_date: str
+    share_time: str
+    if len(tokens) >= 9:
+        share_date = tokens[7]
+        share_time = tokens[8]
+    else:
+        now = datetime.now()
+        share_date = now.strftime("%d.%m.%Y")
+        share_time = now.strftime("%H:%M:%S")
 
     # Выбор шаблона
     position_lower = position_type.lower()
@@ -99,6 +111,8 @@ async def handle_okx_share(message: Message, bot: Bot):
             .replace("{profit_amount}", profit_amount)
             .replace("{entry_price}", entry_price)
             .replace("{exit_price}", exit_price)
+            .replace("{share_date}", share_date)
+            .replace("{share_time}", share_time)
         )
         temp_html.write_text(html_text, encoding="utf-8")
 
