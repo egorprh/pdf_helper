@@ -24,4 +24,8 @@ async def not_allowed_message(message: Message):
 async def not_allowed_callback(callback: CallbackQuery):
     """Catch-all для не-админов: отказ в доступе для callback"""
     await callback.message.answer("Вы не можете пользоваться этим ботом. Обратитесь к разработчику для предоставления доступа.")
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        # Игнорируем ошибки callback answer (например, query is too old)
+        pass

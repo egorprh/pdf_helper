@@ -1,7 +1,12 @@
 import re
 import datetime
 import html as html_lib
-from .constants import PRODUCT_MAP, DURATION_MAP
+import shutil
+import os
+import uuid
+import logging
+import PyPDF2
+from .constants import PRODUCT_MAP, DURATION_MAP, TITLE_HTML_PATH
 
 
 def format_cost(cost_str: str) -> str:
@@ -20,7 +25,8 @@ def format_cost(cost_str: str) -> str:
 
 
 def fill_pdf_html(data: dict, submission_id: str, pdf_html_path: str) -> str:
-    """Создает временный HTML файл с подстановками и возвращает путь к нему."""
+    """Создает временный HTML файл с подстановками и копирует все ресурсы в temp/."""
+    
     with open(pdf_html_path, "r", encoding="utf-8") as f:
         html_text = f.read()
 
@@ -51,8 +57,28 @@ def fill_pdf_html(data: dict, submission_id: str, pdf_html_path: str) -> str:
     for placeholder, value in replacements.items():
         html_text = html_text.replace(placeholder, value)
     
-    # Создаем временный HTML файл в temp/ директории
-    temp_html_path = f"temp/temp_invoice_{submission_id}.html"
+    # Создаем уникальную директорию для этого PDF в temp/
+    temp_dir = f"temp/invoice_{submission_id}"
+    os.makedirs(temp_dir, exist_ok=True)
+    
+    # Копируем все ресурсы из invoice_html/ в temp директорию
+    source_dir = "invoice_html"
+    if os.path.exists(source_dir):
+        for item in os.listdir(source_dir):
+            source_path = os.path.join(source_dir, item)
+            dest_path = os.path.join(temp_dir, item)
+            
+            if os.path.isdir(source_path):
+                # Копируем директории (fonts, assets)
+                if os.path.exists(dest_path):
+                    shutil.rmtree(dest_path)
+                shutil.copytree(source_path, dest_path)
+            else:
+                # Копируем файлы (styles.css, styles.css, pdf.html)
+                shutil.copy2(source_path, dest_path)
+    
+    # Создаем временный HTML файл в temp директории
+    temp_html_path = os.path.join(temp_dir, f"temp_invoice_{submission_id}.html")
     with open(temp_html_path, "w", encoding="utf-8") as f:
         f.write(html_text)
     
@@ -61,9 +87,6 @@ def fill_pdf_html(data: dict, submission_id: str, pdf_html_path: str) -> str:
 
 def fill_title_html(user_name: str) -> str:
     """Создает временный HTML файл с подстановкой имени пользователя"""
-    import uuid
-    import datetime
-    from .constants import TITLE_HTML_PATH
     
     with open(TITLE_HTML_PATH, "r", encoding="utf-8") as f:
         html_text = f.read()
@@ -88,8 +111,6 @@ def fill_title_html(user_name: str) -> str:
 
 def merge_pdfs(title_pdf_path: str, main_pdf_path: str, output_path: str) -> bool:
     """Объединяет титульную страницу с основным PDF"""
-    import logging
-    import PyPDF2
     
     try:
         with open(title_pdf_path, 'rb') as title_file, open(main_pdf_path, 'rb') as main_file:
@@ -116,13 +137,21 @@ def merge_pdfs(title_pdf_path: str, main_pdf_path: str, output_path: str) -> boo
 
 
 def cleanup_files(file_paths: list):
-    """Удаляет временные файлы"""
-    import os
-    import logging
+    """Удаляет временные файлы и директории"""
     
     for file_path in file_paths:
         try:
             if os.path.exists(file_path):
-                os.remove(file_path)
+                if os.path.isdir(file_path):
+                    # Очищаем содержимое папки, но оставляем саму папку
+                    for item in os.listdir(file_path):
+                        item_path = os.path.join(file_path, item)
+                        if os.path.isdir(item_path):
+                            shutil.rmtree(item_path)
+                        else:
+                            os.remove(item_path)
+                else:
+                    # Удаляем файл
+                    os.remove(file_path)
         except OSError as e:
-            logging.warning(f"Не удалось удалить файл {file_path}: {e}")
+            logging.warning(f"Не удалось удалить {file_path}: {e}")

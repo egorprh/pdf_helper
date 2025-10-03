@@ -28,7 +28,7 @@ class InvoiceKeyboards:
     def confirm_kb(self):
         """Клавиатура подтверждения данных"""
         builder = InlineKeyboardBuilder()
-        builder.row(InlineKeyboardButton(text="Подтвердить", callback_data="confirm:yes"))
+        builder.row(InlineKeyboardButton(text="Создать PDF", callback_data="confirm:yes"))
         builder.row(InlineKeyboardButton(text="Отменить", callback_data="confirm:no"))
         return builder.as_markup()
     

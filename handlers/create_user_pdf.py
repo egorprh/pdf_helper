@@ -66,17 +66,17 @@ async def handle_file_choice(callback: CallbackQuery, state: FSMContext, bot: Bo
         return
     
     elif data == "use_existing":
+        await callback.answer()
+
         # Используем существующий файл
         if not os.path.exists(DEFAULT_PDF_PATH):
             await callback.message.answer("❌ Существующий PDF файл не найден.")
             await state.clear()
-            await callback.answer()
             return
         
         await state.update_data(pdf_path=DEFAULT_PDF_PATH, is_uploaded=False)
         await process_pdf_creation(callback, state, bot)
     
-    await callback.answer()
 
 
 @create_user_pdf_router.message(AdminOnly(), StateFilter(UserPdfForm.pdf_file))
@@ -195,4 +195,8 @@ async def cancel_callback(callback: CallbackQuery, state: FSMContext):
     if callback.data == "cancel":
         await callback.message.answer("❌ Создание PDF отменено.")
         await state.clear()
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        # Игнорируем ошибки callback answer (например, query is too old)
+        pass

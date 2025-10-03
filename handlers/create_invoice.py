@@ -12,6 +12,7 @@ from aiogram.fsm.context import FSMContext
 
 from states import Form
 from misc import InvoiceKeyboards, format_cost, fill_pdf_html, PDF_HTML_PATH, PRODUCT_MAP, DURATION_MAP
+from misc.utils import cleanup_files
 from utils.render_pdf import html_to_pdf_playwright
 from utils.utils import send_email_with_attachment
 from filters.admin_only import AdminOnly, NonAdminOnly
@@ -109,14 +110,15 @@ async def callbacks(callback: CallbackQuery, state: FSMContext, bot: Bot):
                 await state.set_state(Form.send_email_confirm)
             else:
                 await callback.message.answer("Ошибка при генерации PDF. Попробуйте еще раз.")
-                # Удаляем временный HTML файл в случае ошибки
-                try:
-                    os.remove(temp_html_path)
-                except OSError:
-                    pass
+                # Очищаем всю папку temp
+                cleanup_files(["temp"])
             
             # Не очищаем состояние при успехе до ответа пользователя
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        # Игнорируем ошибки callback answer (например, query is too old)
+        pass
 
 
 @create_invoice_router.callback_query(AdminOnly(), StateFilter(Form.send_email_confirm))
@@ -132,14 +134,8 @@ async def send_email_callbacks(callback: CallbackQuery, state: FSMContext, bot: 
     email = st.get("email", "")
 
     if data.endswith("no"):
-        # Очистка временных файлов
-        try:
-            if temp_html_path and os.path.exists(temp_html_path):
-                os.remove(temp_html_path)
-            if temp_pdf_path and os.path.exists(temp_pdf_path):
-                os.remove(temp_pdf_path)
-        except OSError as e:
-            logging.warning(f"Не удалось удалить временные файлы: {e}")
+        # Очищаем всю папку temp
+        cleanup_files(["temp"])
         await callback.message.answer("Отправка на email отменена.")
         await state.clear()
         await callback.answer()
@@ -164,17 +160,15 @@ async def send_email_callbacks(callback: CallbackQuery, state: FSMContext, bot: 
     else:
         await callback.message.answer("Не удалось отправить письмо. Проверьте настройки почты и попробуйте снова.")
 
-    # Очистка временных файлов
-    try:
-        if temp_html_path and os.path.exists(temp_html_path):
-            os.remove(temp_html_path)
-        if temp_pdf_path and os.path.exists(temp_pdf_path):
-            os.remove(temp_pdf_path)
-    except OSError as e:
-        logging.warning(f"Не удалось удалить временные файлы: {e}")
+    # Очищаем всю папку temp
+    cleanup_files(["temp"])
 
     await state.clear()
-    await callback.answer()
+    try:
+        await callback.answer()
+    except Exception:
+        # Игнорируем ошибки callback answer (например, query is too old)
+        pass
 
 
 @create_invoice_router.callback_query(AdminOnly(), StateFilter(Form.email, Form.name, Form.phone, Form.order_number, Form.purchase_date, Form.cost))
