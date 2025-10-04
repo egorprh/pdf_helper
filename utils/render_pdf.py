@@ -8,6 +8,7 @@ import asyncio
 from playwright.async_api import async_playwright
 import os
 from pathlib import Path
+import logging
 
 async def html_to_pdf_playwright(html_file_path: str, output_pdf_path: str, css_file_path: str = None, landscape: bool = False) -> bool:
     """Преобразовать HTML файл в PDF с максимальным использованием A4.
@@ -41,15 +42,23 @@ async def html_to_pdf_playwright(html_file_path: str, output_pdf_path: str, css_
                 print(f"⚠️ CSS файл не найден: {css_path}. Будет использован HTML без внешних стилей.")
                 css_file_path = None
 
-        print(f"🔄 Начинаю конвертацию HTML в PDF с максимальным использованием A4...")
-        print(f"📄 HTML файл: {html_path}")
+        logging.info(f"🔄 Начинаю конвертацию HTML в PDF с максимальным использованием A4...")
+        logging.info(f"📄 HTML файл: {html_path}")
         if css_file_path:
-            print(f"🎨 CSS файл: {css_path}")
-        print(f"📋 Выходной PDF: {output_path}")
+            logging.info(f"🎨 CSS файл: {css_path}")
+        logging.info(f"📋 Выходной PDF: {output_path}")
         
         async with async_playwright() as p:
-            # Запускаем браузер в headless режиме
-            browser = await p.chromium.launch(headless=True)
+            # Запускаем браузер в headless режиме с отключенной веб-безопасностью для CORS
+            browser = await p.chromium.launch(
+                headless=True,
+                args=[
+                    '--disable-web-security',
+                    '--disable-features=VizDisplayCompositor',
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox'
+                ]
+            )
             # Используем контекст с повышенной плотностью рендеринга
             context = await browser.new_context(device_scale_factor=2)
             page = await context.new_page()
@@ -85,11 +94,11 @@ async def html_to_pdf_playwright(html_file_path: str, output_pdf_path: str, css_
             await context.close()
             await browser.close()
         
-        print(f"✅ PDF успешно создан: {output_path}")
+        logging.info(f"✅ PDF успешно создан: {output_path}")
         return True
 
     except Exception as e:
-        print(f"❌ Ошибка при конвертации HTML в PDF: {str(e)}")
+        logging.error(f"❌ Ошибка при конвертации HTML в PDF: {str(e)}")
         return False
 
 

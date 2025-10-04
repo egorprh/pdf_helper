@@ -84,17 +84,21 @@ async def callbacks(callback: CallbackQuery, state: FSMContext, bot: Bot):
             # Создаем временный HTML файл с подстановками
             temp_html_path = fill_pdf_html(d, submission_id, PDF_HTML_PATH)
             
-            # Создаем путь для PDF файла с правильным именем
-            temp_pdf_path = f"temp/invoice_{padded_order_number}.pdf"
+            # Создаем путь для PDF файла с правильным именем в той же временной директории
+            temp_pdf_path = os.path.join(os.path.dirname(temp_html_path), f"invoice_{padded_order_number}.pdf")
             
             # Конвертируем HTML в PDF
+            logging.info(f"Начинаю генерацию PDF: HTML={temp_html_path}, PDF={temp_pdf_path}")
+            # CSS файл уже скопирован в временную директорию вместе с HTML
+            css_file_path = os.path.join(os.path.dirname(temp_html_path), "styles.css")
             success = await html_to_pdf_playwright(
                 html_file_path=temp_html_path,
                 output_pdf_path=temp_pdf_path,
-                css_file_path="invoice_html/styles.css"
+                css_file_path=css_file_path
             )
             
             if success:
+                logging.info(f"PDF успешно создан: {temp_pdf_path}")
                 # Отправляем PDF файл
                 await callback.message.answer_document(FSInputFile(temp_pdf_path))
 
@@ -109,6 +113,7 @@ async def callbacks(callback: CallbackQuery, state: FSMContext, bot: Bot):
                 )
                 await state.set_state(Form.send_email_confirm)
             else:
+                logging.error(f"Ошибка при генерации PDF: HTML={temp_html_path}, PDF={temp_pdf_path}")
                 await callback.message.answer("Ошибка при генерации PDF. Попробуйте еще раз.")
                 # Очищаем всю папку temp
                 cleanup_files(["temp"])

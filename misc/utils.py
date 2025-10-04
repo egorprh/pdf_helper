@@ -6,6 +6,7 @@ import os
 import uuid
 import logging
 import PyPDF2
+import stat
 from .constants import PRODUCT_MAP, DURATION_MAP, TITLE_HTML_PATH
 
 
@@ -74,8 +75,32 @@ def fill_pdf_html(data: dict, submission_id: str, pdf_html_path: str) -> str:
                     shutil.rmtree(dest_path)
                 shutil.copytree(source_path, dest_path)
             else:
-                # Копируем файлы (styles.css, styles.css, pdf.html)
+                # Копируем файлы (styles.css, pdf.html)
                 shutil.copy2(source_path, dest_path)
+        
+        # Исправляем права доступа и владельца для всех скопированных файлов
+        try:
+            import pwd
+            import grp
+            app_uid = pwd.getpwnam('app').pw_uid
+            app_gid = grp.getgrnam('app').gr_gid
+            
+            for root, dirs, files in os.walk(temp_dir):
+                for d in dirs:
+                    dir_path = os.path.join(root, d)
+                    os.chmod(dir_path, stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
+                    os.chown(dir_path, app_uid, app_gid)
+                for f in files:
+                    file_path = os.path.join(root, f)
+                    os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+                    os.chown(file_path, app_uid, app_gid)
+        except (ImportError, KeyError):
+            # Fallback: только права доступа
+            for root, dirs, files in os.walk(temp_dir):
+                for d in dirs:
+                    os.chmod(os.path.join(root, d), stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
+                for f in files:
+                    os.chmod(os.path.join(root, f), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
     
     # Создаем временный HTML файл в temp директории
     temp_html_path = os.path.join(temp_dir, f"temp_invoice_{submission_id}.html")
@@ -147,11 +172,52 @@ def cleanup_files(file_paths: list):
                     for item in os.listdir(file_path):
                         item_path = os.path.join(file_path, item)
                         if os.path.isdir(item_path):
-                            shutil.rmtree(item_path)
+                            # Исправляем права доступа и владельца перед удалением
+                            try:
+                                import pwd
+                                import grp
+                                app_uid = pwd.getpwnam('app').pw_uid
+                                app_gid = grp.getgrnam('app').gr_gid
+                                
+                                for root, dirs, files in os.walk(item_path):
+                                    for d in dirs:
+                                        dir_path = os.path.join(root, d)
+                                        os.chmod(dir_path, stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
+                                        os.chown(dir_path, app_uid, app_gid)
+                                    for f in files:
+                                        file_path = os.path.join(root, f)
+                                        os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+                                        os.chown(file_path, app_uid, app_gid)
+                                
+                                shutil.rmtree(item_path)
+                            except (ImportError, KeyError):
+                                # Fallback: просто пытаемся удалить
+                                shutil.rmtree(item_path)
                         else:
-                            os.remove(item_path)
+                            # Исправляем права доступа и владельца перед удалением
+                            try:
+                                import pwd
+                                import grp
+                                app_uid = pwd.getpwnam('app').pw_uid
+                                app_gid = grp.getgrnam('app').gr_gid
+                                os.chmod(item_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+                                os.chown(item_path, app_uid, app_gid)
+                                os.remove(item_path)
+                            except (ImportError, KeyError):
+                                os.chmod(item_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+                                os.remove(item_path)
                 else:
-                    # Удаляем файл
-                    os.remove(file_path)
+                    # Исправляем права доступа и владельца перед удалением
+                    try:
+                        import pwd
+                        import grp
+                        app_uid = pwd.getpwnam('app').pw_uid
+                        app_gid = grp.getgrnam('app').gr_gid
+                        os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+                        os.chown(file_path, app_uid, app_gid)
+                        os.remove(file_path)
+                    except (ImportError, KeyError):
+                        os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+                        os.remove(file_path)
         except OSError as e:
             logging.warning(f"Не удалось удалить {file_path}: {e}")

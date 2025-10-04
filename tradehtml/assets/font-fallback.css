@@ -1,0 +1,14 @@
+/* Fallback шрифты для Docker контейнера */
+* {
+    font-family: "Liberation Sans", "DejaVu Sans", "Noto Sans", Arial, sans-serif !important;
+}
+
+/* Для иконочных шрифтов OKX */
+[class*="okds-"], [class*="okx-trading-"] {
+    font-family: "Liberation Sans", "DejaVu Sans", "Noto Sans", Arial, sans-serif !important;
+}
+
+/* Убираем иконочные символы, если шрифт не загружен */
+[class*="okds-"]:before, [class*="okx-trading-"]:before {
+    content: "" !important;
+}

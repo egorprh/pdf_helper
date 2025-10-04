@@ -143,6 +143,7 @@ async def process_pdf_creation(message_or_callback, state: FSMContext, bot: Bot)
         title_pdf_path = f"temp/title_{uuid.uuid4().hex}.pdf"
         
         # Конвертируем HTML в PDF с альбомной ориентацией
+        logging.info(f"Начинаю создание титульной страницы: HTML={temp_html_path}, PDF={title_pdf_path}")
         success = await html_to_pdf_playwright(
             html_file_path=temp_html_path,
             output_pdf_path=title_pdf_path,
@@ -150,6 +151,7 @@ async def process_pdf_creation(message_or_callback, state: FSMContext, bot: Bot)
         )
         
         if not success:
+            logging.error(f"Ошибка при создании титульной страницы: HTML={temp_html_path}, PDF={title_pdf_path}")
             await message.answer("❌ Ошибка при создании титульной страницы.")
             # Очищаем временные файлы
             cleanup_files([temp_html_path])
