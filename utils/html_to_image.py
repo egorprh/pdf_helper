@@ -43,8 +43,16 @@ async def html_to_image(html_file_path: str, output_path: str = None,
     html_absolute_path = html_path.resolve()
     
     async with async_playwright() as p:
-        # Запускаем браузер
-        browser = await p.chromium.launch(headless=True)
+        # Запускаем браузер с теми же настройками, что и в render_pdf.py
+        browser = await p.chromium.launch(
+            headless=True,
+            args=[
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor',
+                '--no-sandbox',
+                '--disable-setuid-sandbox'
+            ]
+        )
         context = await browser.new_context(
             viewport={'width': width, 'height': height or 800},
             device_scale_factor=6  # Увеличиваем DPI для лучшего качества
@@ -60,8 +68,11 @@ async def html_to_image(html_file_path: str, output_path: str = None,
             # Ждем загрузки всех ресурсов
             await page.wait_for_load_state('networkidle')
             
-            # Ждем немного для полной загрузки стилей и изображений
-            await asyncio.sleep(2)
+            # Ждем больше времени для полной загрузки шрифтов и стилей
+            await asyncio.sleep(3)
+            
+            # Дополнительно ждем загрузки шрифтов
+            await page.evaluate("document.fonts.ready")
             
             # Находим элемент по селектору
             element = await page.query_selector(selector)

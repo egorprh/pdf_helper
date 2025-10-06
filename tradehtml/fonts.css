@@ -1,37 +1,38 @@
 /* Local font faces for trade share images */
 
 @font-face {
-  font-family: "Okx Sans";
-  src: url("./fonts/Okx-Sans-Regular.otf") format("opentype");
+  font-family: "OKX Sans TAB";
+  src: url("fonts/Okx-Sans-Regular.otf") format("opentype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Okx Sans";
-  src: url("./fonts/Okx-Sans-Medium.otf") format("opentype");
+  font-family: "OKX Sans TAB";
+  src: url("fonts/Okx-Sans-Medium.otf") format("opentype");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Okx Sans";
-  src: url("./fonts/Okx-Sans-Bold.otf") format("opentype");
+  font-family: "OKX Sans TAB";
+  src: url("fonts/Okx-Sans-Bold.otf") format("opentype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
-/* Force usage across the share markup */
-html, body {
-  font-family: "Okx Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
+/* Простое применение шрифтов, как в invoice_html */
+html,
+body {
+    font-family: "OKX Sans TAB", "Roboto", "DejaVu Sans", "Liberation Sans", "Noto Sans", Arial, sans-serif;
 }
 
-/* Common weight helpers (optional, for safety) */
-.fw-400 { font-weight: 400; }
-.fw-500 { font-weight: 500; }
-.fw-700 { font-weight: 700; }
+/* Common weight helpers */
+.fw-400 { font-weight: 400 !important; }
+.fw-500 { font-weight: 500 !important; }
+.fw-700 { font-weight: 700 !important; }
 
 
