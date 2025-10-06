@@ -33,6 +33,38 @@ def _normalize_tokens(text: str) -> list[str]:
     return parts
 
 
+def _format_price_with_spaces(value: str) -> str:
+    """Форматирует строковое число: добавляет пробелы между тысячами, сохраняет дробную часть.
+
+    Примеры:
+      "114962.0" -> "114 962.0"
+      "114962"   -> "114 962"
+      "114,962.50" -> "114 962.50"
+      "114962,50" -> "114 962,50" (сохраняем исходный разделитель дробной части)
+    """
+    if not value:
+        return value
+
+    s = str(value).strip()
+    # Определяем разделитель дробной части: "." приоритетно, иначе "," если нет точки
+    decimal_sep = "." if "." in s else ("," if "," in s else None)
+
+    if decimal_sep:
+        integer_part, fractional_part = s.split(decimal_sep, 1)
+    else:
+        integer_part, fractional_part = s, None
+
+    # Убираем все нецифровые символы из целой части (запятые, пробелы и т.д.)
+    integer_digits = "".join(ch for ch in integer_part if ch.isdigit()) or "0"
+
+    # Группируем по тысячам пробелами
+    rev = integer_digits[::-1]
+    grouped_rev = " ".join(rev[i:i+3] for i in range(0, len(rev), 3))
+    grouped = grouped_rev[::-1]
+
+    return f"{grouped}{decimal_sep + fractional_part if fractional_part is not None else ''}"
+
+
 @trade_share_router.message(AdminOnly(), Command("okx"))
 @flags.chat_action(action=ChatAction.UPLOAD_PHOTO)
 async def handle_okx_share(message: Message, bot: Bot):
@@ -40,7 +72,7 @@ async def handle_okx_share(message: Message, bot: Bot):
 
     Формат (space-separated):
     /okx <pair> <position_type> <leverage>x <profit_pct> <profit_amount> <entry_price> <exit_price> <share_date> <share_time>
-    Пример: /okx BTCUSDT Лонг 100 -5,53 -3,48 114,962.0 114,956.0 15.09.2025 20:21:11
+    Пример: /okx BTCUSDT Лонг 100 -5,53 -3,48 114962.0 114956.0 15.09.2025 20:21:11
     """
     text = message.text or ""
 
@@ -55,7 +87,7 @@ async def handle_okx_share(message: Message, bot: Bot):
     # Ожидаем минимум 7 токенов (без даты/времени). 9 токенов, если дата и время переданы явно
     if len(tokens) < 7:
         await message.answer(
-            "Неверный формат. Пример: <code>/okx BTCUSDT Лонг 100 -5,53 -3,48 114,962.0 114,956.0 15.09.2025 20:21:11</code>"
+            "Неверный формат. Пример: <code>/okx BTCUSDT Лонг 100 -5,53 -3,48 114962.0 114956.0 15.09.2025 20:21:11</code>"
         )
         return
 
@@ -105,6 +137,17 @@ async def handle_okx_share(message: Message, bot: Bot):
         if icons_src.exists():
             shutil.copytree(icons_src, icons_dst)
 
+        # Скопируем локальные шрифты и файл подключения шрифтов, чтобы @font-face работал по file://
+        fonts_src = template_path.parent / "fonts"
+        fonts_dst = tmpdir_path / "fonts"
+        if fonts_src.exists():
+            shutil.copytree(fonts_src, fonts_dst)
+
+        fonts_css_src = template_path.parent / "fonts.css"
+        fonts_css_dst = tmpdir_path / "fonts.css"
+        if fonts_css_src.exists():
+            shutil.copyfile(fonts_css_src, fonts_css_dst)
+
         # Копия HTML
         temp_html = tmpdir_path / template_name
         shutil.copyfile(template_path, temp_html)
@@ -122,6 +165,10 @@ async def handle_okx_share(message: Message, bot: Bot):
                 selected_icon_rel = fallback_icon_rel
         except Exception:
             selected_icon_rel = fallback_icon_rel
+        # Отформатируем цены с пробелами между тысячами
+        entry_price_fmt = _format_price_with_spaces(entry_price)
+        exit_price_fmt = _format_price_with_spaces(exit_price)
+
         html_text = (
             html_text
             .replace("{pair}", pair)
@@ -129,8 +176,8 @@ async def handle_okx_share(message: Message, bot: Bot):
             .replace("{leverage}", leverage)
             .replace("{profit_percentage}", profit_percentage)
             .replace("{profit_amount}", profit_amount)
-            .replace("{entry_price}", entry_price)
-            .replace("{exit_price}", exit_price)
+            .replace("{entry_price}", entry_price_fmt)
+            .replace("{exit_price}", exit_price_fmt)
             .replace("{share_date}", share_date)
             .replace("{share_time}", share_time)
             .replace("{pair_icon_src}", selected_icon_rel)
