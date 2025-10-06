@@ -40,7 +40,7 @@ async def handle_okx_share(message: Message, bot: Bot):
 
     Формат (space-separated):
     /okx <pair> <position_type> <leverage>x <profit_pct> <profit_amount> <entry_price> <exit_price> <share_date> <share_time>
-    Пример: /okx SOLUSDT Шорт 50,00x +25,31 +2531,3 165,90 165,06 01.10.2025 15:26:49
+    Пример: /okx BTCUSDT Лонг 100 -5,53 -3,48 114,962.0 114,956.0 15.09.2025 20:21:11
     """
     text = message.text or ""
 
@@ -55,7 +55,7 @@ async def handle_okx_share(message: Message, bot: Bot):
     # Ожидаем минимум 7 токенов (без даты/времени). 9 токенов, если дата и время переданы явно
     if len(tokens) < 7:
         await message.answer(
-            "Неверный формат. Пример: <code>/okx SOLUSDT Шорт 50,00x +25,31 +2531,3 165,90 165,06 01.10.2025 15:26:49</code>"
+            "Неверный формат. Пример: <code>/okx BTCUSDT Лонг 100 -5,53 -3,48 114,962.0 114,956.0 15.09.2025 20:21:11</code>"
         )
         return
 
@@ -78,11 +78,10 @@ async def handle_okx_share(message: Message, bot: Bot):
         share_date = now.strftime("%d.%m.%Y")
         share_time = now.strftime("%H:%M:%S")
 
-    # Выбор шаблона
+    # Выбор шаблона по знаку процента прибыли: "+" -> long, "-" -> short
     position_lower = position_type.lower()
-    template_name = "long.html"
-    if "шорт" in position_lower or "short" in position_lower:
-        template_name = "short.html"
+    profit_sign = (profit_percentage or "").strip()
+    template_name = "long.html" if profit_sign.startswith("+") else "short.html" if profit_sign.startswith("-") else "long.html"
 
     project_root = Path(__file__).resolve().parents[1]
     template_path = project_root / "tradehtml" / template_name
@@ -100,12 +99,29 @@ async def handle_okx_share(message: Message, bot: Bot):
         if assets_src.exists():
             shutil.copytree(assets_src, assets_dst)
 
+        # Скопируем папку иконок монет рядом, чтобы использовать относительный путь ./icons/PAIR.png
+        icons_src = template_path.parent / "icons"
+        icons_dst = tmpdir_path / "icons"
+        if icons_src.exists():
+            shutil.copytree(icons_src, icons_dst)
+
         # Копия HTML
         temp_html = tmpdir_path / template_name
         shutil.copyfile(template_path, temp_html)
 
         # Подстановки в HTML
         html_text = temp_html.read_text(encoding="utf-8")
+        # Определим путь до иконки монеты: ./icons/{PAIR}.png, либо fallback на BTCUSDT.png
+        normalized_pair = (pair or "").upper().strip()
+        requested_icon_rel = f"./icons/{normalized_pair}.png"
+        fallback_icon_rel = "./icons/BTCUSDT.png"
+        selected_icon_rel = requested_icon_rel
+        try:
+            # Проверим существование файла иконки во временной директории
+            if not (tmpdir_path / "icons" / f"{normalized_pair}.png").exists():
+                selected_icon_rel = fallback_icon_rel
+        except Exception:
+            selected_icon_rel = fallback_icon_rel
         html_text = (
             html_text
             .replace("{pair}", pair)
@@ -117,6 +133,7 @@ async def handle_okx_share(message: Message, bot: Bot):
             .replace("{exit_price}", exit_price)
             .replace("{share_date}", share_date)
             .replace("{share_time}", share_time)
+            .replace("{pair_icon_src}", selected_icon_rel)
         )
         temp_html.write_text(html_text, encoding="utf-8")
 

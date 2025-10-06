@@ -16,7 +16,7 @@ async def admin_hint(message: Message):
         "/create_invoice — создать PDF счёт и отправить на почту\n"
         "/create_user_pdf — сгенерировать персональный PDF\n"
         "/okx — сгенерировать изображение торговой сделки на OKX\n\n"
-        "Пример OKX: <code>/okx SOLUSDT Шорт 50,00x +25,31 +2531,3 165,90 165,06 01.10.2025 15:26:49</code>"
+        "Пример OKX: <code>/okx BTCUSDT Лонг 100 -5,53 -3,48 114,962.0 114,956.0 15.09.2025 20:21:11</code>"
     )
 
 
