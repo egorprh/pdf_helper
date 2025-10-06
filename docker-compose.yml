@@ -17,9 +17,6 @@ services:
       - DISPLAY=:99
       - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
     volumes:
-      # Монтируем весь проект (кроме venv и временных файлов)
-      - .:/app:ro
-      
       # Временная директория для генерации файлов
       - temp_files:/app/temp
     env_file:
