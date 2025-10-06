@@ -4,9 +4,11 @@ import tempfile
 from pathlib import Path
 
 from aiogram import Router, Bot
+from aiogram import flags
 from aiogram.types import Message, FSInputFile
 from aiogram.filters import Command
 from aiogram.enums import ChatAction
+from aiogram.utils.chat_action import ChatActionMiddleware
 
 from filters.admin_only import AdminOnly
 from utils.html_to_image import html_to_image
@@ -15,6 +17,7 @@ from datetime import datetime
 
 # Роутер для шеринга сделок
 trade_share_router = Router()
+trade_share_router.message.middleware(ChatActionMiddleware())
 
 
 def _normalize_tokens(text: str) -> list[str]:
@@ -31,6 +34,7 @@ def _normalize_tokens(text: str) -> list[str]:
 
 
 @trade_share_router.message(AdminOnly(), Command("okx"))
+@flags.chat_action(action=ChatAction.UPLOAD_PHOTO)
 async def handle_okx_share(message: Message, bot: Bot):
     """Обработка команды /okx
 
@@ -119,8 +123,6 @@ async def handle_okx_share(message: Message, bot: Bot):
         # Рендерим изображение
         output_dir = project_root / "temp"
         output_image_path = output_dir / f"{pair}_{position_lower}.png"
-
-        await bot.send_chat_action(message.chat.id, ChatAction.UPLOAD_PHOTO)
 
         image_path = await html_to_image(
             html_file_path=str(temp_html),

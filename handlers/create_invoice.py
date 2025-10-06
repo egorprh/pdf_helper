@@ -96,6 +96,9 @@ async def callbacks(callback: CallbackQuery, state: FSMContext, bot: Bot):
                 output_pdf_path=temp_pdf_path,
                 css_file_path=css_file_path
             )
+
+            # Показываем chat action "отправка файла"
+            await bot.send_chat_action(callback.message.chat.id, ChatAction.UPLOAD_DOCUMENT)
             
             if success:
                 logging.info(f"PDF успешно создан: {temp_pdf_path}")

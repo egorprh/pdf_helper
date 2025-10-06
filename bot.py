@@ -17,6 +17,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 import asyncio
 from filters.admin_only import AdminOnly, NonAdminOnly
 from handlers import create_invoice_router, plug_router, trade_share_router, create_user_pdf_router
+from middlewares.spam_protection import AntiSpamMiddleware
 
 
 logging.basicConfig(level=logging.INFO)
@@ -29,6 +30,9 @@ if not TELEGRAM_TOKEN:
 bot = Bot(token=TELEGRAM_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
+
+# Глобальный антиспам мидлвар для всех обновлений
+dp.update.middleware(AntiSpamMiddleware(bot))
 
 
 async def send_startup_message():
@@ -61,6 +65,7 @@ dp.include_router(plug_router)  # Заглушки (подключаем пос�
 
 if __name__ == "__main__":
     async def main():
+        # Очищаем все сообщения в чате  
         await bot.delete_webhook(drop_pending_updates=True)
         
         # Отправляем сообщение о запуске администраторам

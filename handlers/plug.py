@@ -11,7 +11,13 @@ plug_router = Router()
 @plug_router.message(AdminOnly())
 async def admin_hint(message: Message):
     """Catch-all для админов: подсказка по использованию"""
-    await message.answer("Воспользуйтесь командами /create_invoice, /create_user_pdf и /okx.\n\nПример OKX: <code>/okx SOLUSDT Шорт 50,00x +25,31 +2531,3 165,90 165,06 01.10.2025 15:26:49</code>")
+    await message.answer(
+        "Доступные команды:\n"
+        "/create_invoice — создать PDF счёт и отправить на почту\n"
+        "/create_user_pdf — сгенерировать персональный PDF\n"
+        "/okx — сгенерировать изображение торговой сделки на OKX\n\n"
+        "Пример OKX: <code>/okx SOLUSDT Шорт 50,00x +25,31 +2531,3 165,90 165,06 01.10.2025 15:26:49</code>"
+    )
 
 
 @plug_router.message(NonAdminOnly())
