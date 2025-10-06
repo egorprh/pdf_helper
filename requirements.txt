@@ -4,3 +4,8 @@ aiogram==3.22
 python-dotenv==1.0.1
 certifi==2025.8.3
 PyPDF2>=3.0.0
+# Это для скачивания иконки из okx
+# aiohttp>=3.9.0
+# selenium>=4.25.0
+# webdriver-manager>=4.0.2
+# requests>=2.32.3

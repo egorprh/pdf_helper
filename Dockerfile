@@ -24,6 +24,15 @@ COPY invoice_html/fonts/*.ttf /usr/share/fonts/truetype/sf-pro-display/
 # Устанавливаем права доступа для шрифтов
 RUN chmod 644 /usr/share/fonts/truetype/sf-pro-display/*
 
+# Устанавливаем системные шрифты Okx Sans
+RUN mkdir -p /usr/share/fonts/truetype/okx-sans
+
+# Копируем OTF шрифты Okx Sans в системную директорию
+COPY tradehtml/fonts/*.otf /usr/share/fonts/truetype/okx-sans/
+
+# Устанавливаем права доступа для шрифтов Okx Sans
+RUN chmod 644 /usr/share/fonts/truetype/okx-sans/*
+
 # Обновляем кэш шрифтов
 RUN fc-cache -fv
 
