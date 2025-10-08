@@ -79,31 +79,34 @@ async def html_to_image(html_file_path: str, output_path: str = None,
             if not element:
                 raise Exception(f"Элемент с селектором '{selector}' не найден")
             
-            # Делаем скриншот элемента
+            # Делаем скриншот именно элемента (без ручного clip, чтобы избежать артефактов от округления)
             loc = page.locator(selector)
-            box = await loc.bounding_box()
-            # может вернуть None до рендера — подождём появления и стабильности
             await loc.wait_for(state="visible")
 
-            # округляем клип так, чтобы не было «щели» справа/снизу
-            from math import floor, ceil
-            clip = {
-                "x": floor(box["x"]),
-                "y": floor(box["y"]),
-                "width": ceil(box["width"]),
-                "height": ceil(box["height"]),
-            }
-
-            # фон страницы сделаем тёмным и уберём возможные отступы
+            # Уберём внешние отступы и принудительно сделаем фон прозрачным, чтобы не было подложки
             await page.add_style_tag(content="""
-                html,body{margin:0;padding:0;background:#000;}
+                html,body{margin:0;padding:0;background:transparent !important;overflow:hidden !important;}
+                #dept_img_trade{
+                    margin:0 !important;
+                    padding:0 !important;
+                    border:0 !important;
+                    outline:1px solid transparent !important;
+                    box-sizing:border-box !important;
+                    background:transparent !important;
+                    box-shadow:none !important;
+                    border-radius:0 !important;
+                    overflow:hidden !important;
+                    transform:translateZ(0);
+                    image-rendering:-webkit-optimize-contrast;
+                }
+                ::-webkit-scrollbar{width:0;height:0}
             """)
 
-            await page.screenshot(
+            await loc.screenshot(
                 path=str(output_path),
                 scale='device',
                 type='png',
-                clip=clip,
+                omit_background=True,
             )
             
             print(f"Изображение успешно сохранено: {output_path}")
