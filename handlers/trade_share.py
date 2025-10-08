@@ -34,18 +34,27 @@ def _normalize_tokens(text: str) -> list[str]:
 
 
 def _format_price_with_spaces(value: str) -> str:
-    """Форматирует строковое число: добавляет пробелы между тысячами, сохраняет дробную часть.
+    """Форматирует строковое число: добавляет пробелы между тысячами, сохраняет дробную часть и знак.
 
     Примеры:
       "114962.0" -> "114 962.0"
       "114962"   -> "114 962"
       "114,962.50" -> "114 962.50"
       "114962,50" -> "114 962,50" (сохраняем исходный разделитель дробной части)
+      "+15000" -> "+15 000"
+      "-15000.50" -> "-15 000.50"
     """
     if not value:
         return value
 
     s = str(value).strip()
+    
+    # Сохраняем знак в начале
+    sign = ""
+    if s.startswith(("+", "-")):
+        sign = s[0]
+        s = s[1:]
+    
     # Определяем разделитель дробной части: "." приоритетно, иначе "," если нет точки
     decimal_sep = "." if "." in s else ("," if "," in s else None)
 
@@ -62,7 +71,7 @@ def _format_price_with_spaces(value: str) -> str:
     grouped_rev = " ".join(rev[i:i+3] for i in range(0, len(rev), 3))
     grouped = grouped_rev[::-1]
 
-    return f"{grouped}{decimal_sep + fractional_part if fractional_part is not None else ''}"
+    return f"{sign}{grouped}{decimal_sep + fractional_part if fractional_part is not None else ''}"
 
 
 @trade_share_router.message(AdminOnly(), Command("okx"))
@@ -168,6 +177,7 @@ async def handle_okx_share(message: Message, bot: Bot):
         # Отформатируем цены с пробелами между тысячами
         entry_price_fmt = _format_price_with_spaces(entry_price)
         exit_price_fmt = _format_price_with_spaces(exit_price)
+        profit_amount_fmt = _format_price_with_spaces(profit_amount)
 
         html_text = (
             html_text
@@ -175,7 +185,7 @@ async def handle_okx_share(message: Message, bot: Bot):
             .replace("{position_type}", position_type)
             .replace("{leverage}", leverage)
             .replace("{profit_percentage}", profit_percentage)
-            .replace("{profit_amount}", profit_amount)
+            .replace("{profit_amount}", profit_amount_fmt)
             .replace("{entry_price}", entry_price_fmt)
             .replace("{exit_price}", exit_price_fmt)
             .replace("{share_date}", share_date)
