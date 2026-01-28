@@ -45,13 +45,26 @@ def _format_price_with_spaces(value: str) -> str:
     if not value:
         return value
 
-    s = str(value).strip()
+    original_value = str(value)
+    s = original_value.strip()
+
+    if not s:
+        return original_value
 
     # Сохраняем знак в начале
     sign = ""
     if s.startswith(("+", "-")):
         sign = s[0]
         s = s[1:]
+
+    if not s:
+        return original_value
+
+    allowed_chars = set("0123456789., ")
+    if any(ch not in allowed_chars for ch in s):
+        return original_value
+    if not any(ch.isdigit() for ch in s):
+        return original_value
 
     # Определяем разделитель дробной части: "." приоритетно, иначе "," если нет точки
     decimal_sep = "." if "." in s else ("," if "," in s else None)
