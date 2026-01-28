@@ -138,6 +138,7 @@
 .card-dynamic .header .title {
   font-size: 49px;
   font-family: "Ubuntu Condensed";
+  font-weight: 700;
 }
 
 .card-dynamic .header .title span {
@@ -220,6 +221,7 @@
 .card-dynamic .content .dinamic-number .number-3 {
   font-family: "Roboto Condensed";
   font-size: 53px;
+  font-weight: 700;
 }
 
 .card-dynamic .content .data {
