@@ -331,6 +331,8 @@ async def handle_forex_share(message: Message, bot: Bot):
     formatted_values = {
         key: _format_price_with_spaces(data[key]) for key in numeric_keys
     }
+    profit_raw = data["profit"].strip()
+    profit_class = "red" if "-" in profit_raw else "blue"
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir_path = Path(tmpdir)
@@ -359,6 +361,7 @@ async def handle_forex_share(message: Message, bot: Bot):
             .replace("{delta}", formatted_values["delta"])
             .replace("{pct}", formatted_values["pct"])
             .replace("{profit}", formatted_values["profit"])
+            .replace("{profit_class}", profit_class)
             .replace("{open_dt}", data["open_dt"])
             .replace("{close_dt}", data["close_dt"])
             .replace("{sl}", formatted_values["sl"])
