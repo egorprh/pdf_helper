@@ -1,19 +1,17 @@
-import os
+import shlex
 import shutil
 import tempfile
+from datetime import datetime
 from pathlib import Path
 
-from aiogram import Router, Bot
-from aiogram import flags
-from aiogram.types import Message, FSInputFile
-from aiogram.filters import Command
+from aiogram import Bot, Router, flags
 from aiogram.enums import ChatAction
+from aiogram.filters import Command
+from aiogram.types import FSInputFile, Message
 from aiogram.utils.chat_action import ChatActionMiddleware
 
 from filters.admin_only import AdminOnly
 from utils.html_to_image import html_to_image
-from datetime import datetime
-
 
 # Роутер для шеринга сделок
 trade_share_router = Router()
@@ -48,13 +46,13 @@ def _format_price_with_spaces(value: str) -> str:
         return value
 
     s = str(value).strip()
-    
+
     # Сохраняем знак в начале
     sign = ""
     if s.startswith(("+", "-")):
         sign = s[0]
         s = s[1:]
-    
+
     # Определяем разделитель дробной части: "." приоритетно, иначе "," если нет точки
     decimal_sep = "." if "." in s else ("," if "," in s else None)
 
@@ -68,10 +66,34 @@ def _format_price_with_spaces(value: str) -> str:
 
     # Группируем по тысячам пробелами
     rev = integer_digits[::-1]
-    grouped_rev = " ".join(rev[i:i+3] for i in range(0, len(rev), 3))
+    grouped_rev = " ".join(rev[i : i + 3] for i in range(0, len(rev), 3))
     grouped = grouped_rev[::-1]
 
     return f"{sign}{grouped}{decimal_sep + fractional_part if fractional_part is not None else ''}"
+
+
+def _parse_key_value_pairs(text: str) -> tuple[dict[str, str], list[str]]:
+    """Парсит строку key=value с поддержкой кавычек."""
+    lexer = shlex.shlex(text, posix=True)
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    tokens = list(lexer)
+
+    result: dict[str, str] = {}
+    invalid_tokens: list[str] = []
+
+    for token in tokens:
+        if "=" not in token:
+            invalid_tokens.append(token)
+            continue
+        key, value = token.split("=", 1)
+        key = key.strip().lower()
+        if not key:
+            invalid_tokens.append(token)
+            continue
+        result[key] = value.strip()
+
+    return result, invalid_tokens
 
 
 @trade_share_router.message(AdminOnly(), Command("okx"))
@@ -89,7 +111,7 @@ async def handle_okx_share(message: Message, bot: Bot):
     # Aiogram уже выделяет команду, но надёжнее отрезать вручную
     content = text
     if content.startswith("/okx"):
-        content = content[len("/okx"):].strip()
+        content = content[len("/okx") :].strip()
 
     tokens = _normalize_tokens(content)
 
@@ -122,7 +144,13 @@ async def handle_okx_share(message: Message, bot: Bot):
     # Выбор шаблона по знаку процента прибыли: "+" -> long, "-" -> short
     position_lower = position_type.lower()
     profit_sign = (profit_percentage or "").strip()
-    template_name = "long.html" if profit_sign.startswith("+") else "short.html" if profit_sign.startswith("-") else "long.html"
+    template_name = (
+        "long.html"
+        if profit_sign.startswith("+")
+        else "short.html"
+        if profit_sign.startswith("-")
+        else "long.html"
+    )
 
     project_root = Path(__file__).resolve().parents[1]
     template_path = project_root / "tradehtml" / template_name
@@ -180,8 +208,7 @@ async def handle_okx_share(message: Message, bot: Bot):
         profit_amount_fmt = _format_price_with_spaces(profit_amount)
 
         html_text = (
-            html_text
-            .replace("{pair}", pair)
+            html_text.replace("{pair}", pair)
             .replace("{position_type}", position_type)
             .replace("{leverage}", leverage)
             .replace("{profit_percentage}", profit_percentage)
@@ -214,3 +241,131 @@ async def handle_okx_share(message: Message, bot: Bot):
             pass
 
 
+@trade_share_router.message(AdminOnly(), Command("forex"))
+@flags.chat_action(action=ChatAction.UPLOAD_PHOTO)
+async def handle_forex_share(message: Message, bot: Bot):
+    """Обработка команды /forex (key=value)."""
+    text = (message.text or "").strip()
+    if not text:
+        await message.answer("Неверный формат команды /forex.")
+        return
+
+    content = text
+    if content.startswith("/forex"):
+        parts = content.split(" ", 1)
+        content = parts[1].strip() if len(parts) > 1 else ""
+
+    data, invalid_tokens = _parse_key_value_pairs(content)
+
+    required_keys = [
+        "pair",
+        "side",
+        "side_price",
+        "ticket",
+        "desc",
+        "open",
+        "close",
+        "delta",
+        "pct",
+        "profit",
+        "open_dt",
+        "close_dt",
+        "sl",
+        "swap",
+        "tp",
+        "fee",
+    ]
+    missing_keys = [k for k in required_keys if not data.get(k)]
+
+    if invalid_tokens or missing_keys:
+        await message.answer(
+            "Неверный формат. Пример:\n"
+            "<code>/forex pair=EURUSD side=buy side_price=1.06 ticket=54814272772 "
+            'desc="Euro vs US Dollar" open=1.16540 close=1.16252 delta=521 pct=0.35 '
+            'profit=6108.01 open_dt="2026.01.26 10:12:45" close_dt="2026.01.26 10:35:23" '
+            "sl=154.335 swap=2.10 tp=153.536 fee=-5.30</code>"
+        )
+        return
+
+    side = data["side"].strip().lower()
+    if side not in {"buy", "sell"}:
+        await message.answer("Поле side должно быть buy или sell.")
+        return
+
+    pair = data["pair"].strip().upper()
+    template_name = "buy-light.html" if side == "buy" else "sell-light.html"
+
+    project_root = Path(__file__).resolve().parents[1]
+    template_dir = project_root / "forex_html"
+    template_path = template_dir / template_name
+
+    if not template_path.exists():
+        await message.answer("Шаблон не найден.")
+        return
+
+    numeric_keys = [
+        "side_price",
+        "open",
+        "close",
+        "delta",
+        "pct",
+        "profit",
+        "sl",
+        "swap",
+        "tp",
+        "fee",
+    ]
+    formatted_values = {
+        key: _format_price_with_spaces(data[key]) for key in numeric_keys
+    }
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir_path = Path(tmpdir)
+        fonts_src = template_dir / "fonts"
+        fonts_dst = tmpdir_path / "fonts"
+        if fonts_src.exists():
+            shutil.copytree(fonts_src, fonts_dst)
+
+        style_src = template_dir / "style.css"
+        style_dst = tmpdir_path / "style.css"
+        if style_src.exists():
+            shutil.copyfile(style_src, style_dst)
+
+        temp_html = tmpdir_path / template_name
+        shutil.copyfile(template_path, temp_html)
+
+        html_text = temp_html.read_text(encoding="utf-8")
+        html_text = (
+            html_text.replace("{pair}", pair)
+            .replace("{side}", side)
+            .replace("{side_price}", formatted_values["side_price"])
+            .replace("{ticket}", data["ticket"])
+            .replace("{desc}", data["desc"])
+            .replace("{open}", formatted_values["open"])
+            .replace("{close}", formatted_values["close"])
+            .replace("{delta}", formatted_values["delta"])
+            .replace("{pct}", formatted_values["pct"])
+            .replace("{profit}", formatted_values["profit"])
+            .replace("{open_dt}", data["open_dt"])
+            .replace("{close_dt}", data["close_dt"])
+            .replace("{sl}", formatted_values["sl"])
+            .replace("{swap}", formatted_values["swap"])
+            .replace("{tp}", formatted_values["tp"])
+            .replace("{fee}", formatted_values["fee"])
+        )
+        temp_html.write_text(html_text, encoding="utf-8")
+
+        output_dir = project_root / "temp"
+        output_image_path = output_dir / f"forex_{pair}_{side}.png"
+
+        image_path = await html_to_image(
+            html_file_path=str(temp_html),
+            output_path=str(output_image_path),
+            selector="#forex_img",
+            width=1142,
+            height=564,
+            device_scale_factor=2,
+            scale="device",
+        )
+
+        await message.answer_photo(FSInputFile(image_path))

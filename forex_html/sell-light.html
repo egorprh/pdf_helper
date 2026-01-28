@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="card-dynamic card-4" id="forex_img">
+        <div class="header bg-header-3">
+            <div>
+                <div class="title">{pair} <span class="text-red">{side} {side_price}</span></div>
+                <div class="title-number text-gray-6">#{ticket}</div>
+            </div>
+            <div class="description text-gray-7">{desc}</div>
+        </div>
+
+        <div class="content">
+            <div class="dinamic-number red">
+                <div>
+                    <div class="number-1 text-gray-8">{open} → {close}</div>
+                    <div class="number-2">
+                        ∆ = {delta} ({pct}%)
+                        <svg width="26" height="17" viewBox="0 0 26 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M23.7676 1.76782L12.7676 12.7678L1.76758 1.76782" stroke-width="5" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="number-3">{profit}</div>
+            </div>
+
+            <div class="data text-gray-8">{open_dt} → {close_dt}</div>
+
+            <div class="grid">
+                <div class="grid-item item-1">
+                    <div class="text-gray-4">S/L:</div>
+                    <div class="text-gray-8">{sl}</div>
+                </div>
+
+                <div class="grid-item item-2">
+                    <div class="text-gray-4">Своп:</div>
+                    <div class="text-gray-8">{swap}</div>
+                </div>
+
+                <div class="grid-item item-3">
+                    <div class="text-gray-4">T/P:</div>
+                    <div class="text-gray-8">{tp}</div>
+                </div>
+
+                <div class="grid-item item-4">
+                    <div class="text-gray-4">Комиссия:</div>
+                    <div class="text-gray-8">{fee}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

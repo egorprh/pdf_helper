@@ -33,6 +33,17 @@ COPY tradehtml/fonts/*.otf /usr/share/fonts/truetype/okx-sans/
 # Устанавливаем права доступа для шрифтов Okx Sans
 RUN chmod 644 /usr/share/fonts/truetype/okx-sans/*
 
+# Устанавливаем системные шрифты Forex
+RUN mkdir -p /usr/share/fonts/truetype/forex
+
+# Копируем шрифты Forex в системную директорию
+COPY forex_html/fonts/*.woff2 /usr/share/fonts/truetype/forex/
+COPY forex_html/fonts/*.woff /usr/share/fonts/truetype/forex/
+COPY forex_html/fonts/*.ttf /usr/share/fonts/truetype/forex/
+
+# Устанавливаем права доступа для шрифтов Forex
+RUN chmod 644 /usr/share/fonts/truetype/forex/*
+
 # Обновляем кэш шрифтов
 RUN fc-cache -fv
 

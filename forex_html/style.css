@@ -1,0 +1,252 @@
+@font-face {
+  font-family: "Microsoft Sans Serif";
+  src: url("fonts/microsoftsansserit.woff2") format("woff2"), url("fonts/microsoftsansserit.woff") format("woff"), url("fonts/microsoftsansserit.tif") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Roboto";
+  src: url("fonts/Roboto.woff2") format("woff2"), url("fonts/Roboto.woff") format("woff"), url("fonts/Roboto.tif") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Roboto Condensed";
+  src: url("fonts/RobotoCondensed-Regular.woff2") format("woff2"), url("fonts/RobotoCondensed-Regular.woff") format("woff"), url("fonts/RobotoCondensed-Regular.tif") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Roboto Condensed";
+  src: url("fonts/RobotoCondensed-Bold.woff2") format("woff2"), url("fonts/RobotoCondensed-Bold.woff") format("woff"), url("fonts/RobotoCondensed-Bold.tif") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Ubuntu Condensed";
+  src: url("fonts/UbuntuCondensed-Regular.woff2") format("woff2"), url("fonts/UbuntuCondensed-Regular.woff") format("woff"), url("fonts/UbuntuCondensed-Regular.tif") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.card-dynamic {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  width: 1142px;
+  height: 564px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.card-dynamic .text-white {
+  color: #fff;
+}
+
+.card-dynamic .text-red {
+  color: #EC483E;
+}
+
+.card-dynamic .text-blue {
+  color: #1387F6;
+}
+
+.card-dynamic .text-green {
+  color: #20AC37;
+}
+
+.card-dynamic .text-gray-1 {
+  color: #B0BEAF;
+}
+
+.card-dynamic .text-gray-2 {
+  color: #6B776D;
+}
+
+.card-dynamic .text-gray-3 {
+  color: #A9A9A9;
+}
+
+.card-dynamic .text-gray-4 {
+  color: #707072;
+}
+
+.card-dynamic .text-gray-5 {
+  color: #B9B9BB;
+}
+
+.card-dynamic .text-gray-6 {
+  color: #474749;
+}
+
+.card-dynamic .text-gray-7 {
+  color: #949494;
+}
+
+.card-dynamic .text-gray-8 {
+  color: #4F4E53;
+}
+
+.card-dynamic .bg-header-1 {
+  background-color: #002201;
+}
+
+.card-dynamic .bg-header-2 {
+  background-color: #101010;
+}
+
+.card-dynamic .bg-header-3 {
+  background-color: #F1F1F1;
+}
+
+.card-dynamic.card-1,
+.card-dynamic.card-2 {
+  background-color: #1C1C1E;
+}
+
+.card-dynamic.card-3,
+.card-dynamic.card-4 {
+  background-color: #F8F8F8;
+}
+
+.card-dynamic .header {
+  padding: 20px 15px;
+}
+
+.card-dynamic .header>div {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+}
+
+.card-dynamic .header .title {
+  font-size: 49px;
+  font-family: "Ubuntu Condensed";
+}
+
+.card-dynamic .header .title span {
+  font-family: Roboto Condensed;
+  font-weight: 700;
+}
+
+.card-dynamic .header .title-number {
+  font-size: 38px;
+  font-family: "Roboto";
+}
+
+.card-dynamic .header .description {
+  font-size: 40px;
+  font-family: "Roboto";
+}
+
+.card-dynamic .content {
+  padding: 20px 15px;
+  -webkit-box-flex: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+}
+
+.card-dynamic .content .dinamic-number {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+}
+
+.card-dynamic .content .dinamic-number.blue .number-2,
+.card-dynamic .content .dinamic-number.blue .number-3 {
+  color: #2386EC;
+}
+
+.card-dynamic .content .dinamic-number.blue svg {
+  stroke: #2386EC;
+}
+
+.card-dynamic .content .dinamic-number.red .number-2,
+.card-dynamic .content .dinamic-number.red .number-3 {
+  color: #E73932;
+}
+
+.card-dynamic .content .dinamic-number.red svg {
+  stroke: #E73932;
+}
+
+.card-dynamic .content .dinamic-number .number-1 {
+  font-family: "Roboto";
+  font-size: 47px;
+  margin-bottom: 10px;
+}
+
+.card-dynamic .content .dinamic-number .number-2 {
+  font-family: "Roboto";
+  font-size: 41px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.card-dynamic .content .dinamic-number .number-3 {
+  font-family: "Roboto Condensed";
+  font-size: 53px;
+}
+
+.card-dynamic .content .data {
+  font-family: "Microsoft Sans Serif";
+  font-size: 40px;
+}
+
+.card-dynamic .content .grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  font-family: "Microsoft Sans Serif";
+  font-size: 42px;
+}
+
+.card-dynamic .content .grid .grid-item {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+}
+
+.card-dynamic .content .grid .grid-item.item-1,
+.card-dynamic .content .grid .grid-item.item-3 {
+  padding-right: 120px;
+}
+
+/*# sourceMappingURL=style.css.map */
