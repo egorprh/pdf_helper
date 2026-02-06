@@ -320,7 +320,6 @@ async def handle_forex_share(message: Message, bot: Bot):
         "side_price",
         "open",
         "close",
-        "delta",
         "pct",
         "profit",
         "sl",
@@ -332,7 +331,10 @@ async def handle_forex_share(message: Message, bot: Bot):
         key: _format_price_with_spaces(data[key]) for key in numeric_keys
     }
     profit_raw = data["profit"].strip()
+    profit_is_negative = profit_raw.startswith("-")
     profit_class = "red" if "-" in profit_raw else "blue"
+    sl_class = "text-red" if profit_is_negative else "text-gray-8"
+    tp_class = "text-gray-8" if profit_is_negative else "text-green"
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir_path = Path(tmpdir)
@@ -358,7 +360,7 @@ async def handle_forex_share(message: Message, bot: Bot):
             .replace("{desc}", data["desc"])
             .replace("{open}", formatted_values["open"])
             .replace("{close}", formatted_values["close"])
-            .replace("{delta}", formatted_values["delta"])
+            .replace("{delta}", data["delta"])
             .replace("{pct}", formatted_values["pct"])
             .replace("{profit}", formatted_values["profit"])
             .replace("{profit_class}", profit_class)
@@ -368,6 +370,8 @@ async def handle_forex_share(message: Message, bot: Bot):
             .replace("{swap}", formatted_values["swap"])
             .replace("{tp}", formatted_values["tp"])
             .replace("{fee}", formatted_values["fee"])
+            .replace("{sl_class}", sl_class)
+            .replace("{tp_class}", tp_class)
         )
         temp_html.write_text(html_text, encoding="utf-8")
 
