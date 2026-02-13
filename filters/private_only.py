@@ -1,5 +1,6 @@
 from aiogram.filters import BaseFilter
 from aiogram.types import TelegramObject
+from aiogram.enums import ChatType
 
 
 class PrivateOnly(BaseFilter):
@@ -18,5 +19,11 @@ class PrivateOnly(BaseFilter):
         if chat is None:
             return False
 
-        return getattr(chat, "type", None) == "private"
+        chat_type = getattr(chat, "type", None)
+
+        # aiogram can return either raw string or ChatType enum
+        if isinstance(chat_type, ChatType):
+            return chat_type == ChatType.PRIVATE
+
+        return str(chat_type) == "private"
 

@@ -16,7 +16,11 @@ async def admin_hint(message: Message):
         "/create_invoice — создать PDF счёт и отправить на почту\n"
         "/create_user_pdf — сгенерировать персональный PDF\n"
         "/okx — сгенерировать изображение торговой сделки на OKX\n"
-        "/forex — сгенерировать карточку сделки Forex\n\n"
+        "/forex — сгенерировать карточку сделки Forex\n"
+        "/add_comment_channel — добавить канал в список для комментариев\n"
+        "/rm_channel — удалить канал из списка для комментариев\n"
+        "/set_comment — изменить текст комментария для канала\n"
+        "/get_raw_html — получить HTML выбранного сообщения (в ответ на сообщение)\n\n"
         "Пример OKX: <code>/okx BTCUSDT Лонг 100 -5,53 -3,48 114962.0 114956.0 15.09.2025 20:21:11</code>\n"
         "Пример Forex: <code>/forex pair=EURUSD side=buy side_price=1.06 ticket=54814272772 "
         'desc="Euro vs US Dollar" open=1.16540 close=1.16252 delta=521 pct=0.35 '

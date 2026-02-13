@@ -16,7 +16,13 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 import asyncio
 from filters.admin_only import AdminOnly, NonAdminOnly
-from handlers import create_invoice_router, plug_router, trade_share_router, create_user_pdf_router
+from handlers import (
+    create_invoice_router,
+    plug_router,
+    trade_share_router,
+    create_user_pdf_router,
+    channel_comments_router,
+)
 from middlewares.spam_protection import AntiSpamMiddleware
 
 
@@ -60,6 +66,7 @@ async def send_startup_message():
 dp.include_router(create_invoice_router)  # Основные команды
 dp.include_router(trade_share_router)  # Шеринг сделок /okx
 dp.include_router(create_user_pdf_router)  # Создание пользовательского PDF
+dp.include_router(channel_comments_router)  # Комментарии к постам каналов
 dp.include_router(plug_router)  # Заглушки (подключаем последним)
 
 
