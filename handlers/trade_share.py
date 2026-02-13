@@ -11,6 +11,7 @@ from aiogram.types import FSInputFile, Message
 from aiogram.utils.chat_action import ChatActionMiddleware
 
 from filters.admin_only import AdminOnly
+from filters.private_only import PrivateOnly
 from utils.html_to_image import html_to_image
 
 # Роутер для шеринга сделок
@@ -109,7 +110,7 @@ def _parse_key_value_pairs(text: str) -> tuple[dict[str, str], list[str]]:
     return result, invalid_tokens
 
 
-@trade_share_router.message(AdminOnly(), Command("okx"))
+@trade_share_router.message(PrivateOnly(), AdminOnly(), Command("okx"))
 @flags.chat_action(action=ChatAction.UPLOAD_PHOTO)
 async def handle_okx_share(message: Message, bot: Bot):
     """Обработка команды /okx
@@ -254,7 +255,7 @@ async def handle_okx_share(message: Message, bot: Bot):
             pass
 
 
-@trade_share_router.message(AdminOnly(), Command("forex"))
+@trade_share_router.message(PrivateOnly(), AdminOnly(), Command("forex"))
 @flags.chat_action(action=ChatAction.UPLOAD_PHOTO)
 async def handle_forex_share(message: Message, bot: Bot):
     """Обработка команды /forex (key=value)."""

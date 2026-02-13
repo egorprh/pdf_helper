@@ -11,6 +11,7 @@ from aiogram.fsm.context import FSMContext
 from states import UserPdfForm
 from utils.render_pdf import html_to_pdf_playwright
 from filters.admin_only import AdminOnly
+from filters.private_only import PrivateOnly
 from misc.keyboards import UserPdfKeyboards
 from misc.constants import DEFAULT_PDF_PATH
 from misc.utils import fill_title_html, merge_pdfs, cleanup_files
@@ -22,7 +23,7 @@ create_user_pdf_router = Router()
 keyboards = UserPdfKeyboards()
 
 
-@create_user_pdf_router.message(AdminOnly(), Command("create_user_pdf"))
+@create_user_pdf_router.message(PrivateOnly(), AdminOnly(), Command("create_user_pdf"))
 async def start_create_user_pdf(message: Message, state: FSMContext):
     """Начало создания пользовательского PDF"""
     await state.clear()
@@ -34,7 +35,7 @@ async def start_create_user_pdf(message: Message, state: FSMContext):
     await state.set_state(UserPdfForm.user_name)
 
 
-@create_user_pdf_router.message(AdminOnly(), StateFilter(UserPdfForm.user_name))
+@create_user_pdf_router.message(PrivateOnly(), AdminOnly(), StateFilter(UserPdfForm.user_name))
 async def process_user_name(message: Message, state: FSMContext):
     """Обработка введенного имени пользователя"""
     user_name = message.text.strip()
@@ -54,7 +55,7 @@ async def process_user_name(message: Message, state: FSMContext):
     await state.set_state(UserPdfForm.pdf_file)
 
 
-@create_user_pdf_router.callback_query(AdminOnly(), StateFilter(UserPdfForm.pdf_file))
+@create_user_pdf_router.callback_query(PrivateOnly(), AdminOnly(), StateFilter(UserPdfForm.pdf_file))
 async def handle_file_choice(callback: CallbackQuery, state: FSMContext, bot: Bot):
     """Обработка выбора файла"""
     data = callback.data
@@ -79,7 +80,7 @@ async def handle_file_choice(callback: CallbackQuery, state: FSMContext, bot: Bo
     
 
 
-@create_user_pdf_router.message(AdminOnly(), StateFilter(UserPdfForm.pdf_file))
+@create_user_pdf_router.message(PrivateOnly(), AdminOnly(), StateFilter(UserPdfForm.pdf_file))
 async def handle_uploaded_file(message: Message, state: FSMContext, bot: Bot):
     """Обработка загруженного файла"""
     if not message.document:
@@ -191,7 +192,7 @@ async def process_pdf_creation(message_or_callback, state: FSMContext, bot: Bot)
         await state.clear()
 
 
-@create_user_pdf_router.callback_query(AdminOnly(), StateFilter(UserPdfForm.user_name))
+@create_user_pdf_router.callback_query(PrivateOnly(), AdminOnly(), StateFilter(UserPdfForm.user_name))
 async def cancel_callback(callback: CallbackQuery, state: FSMContext):
     """Обработчик кнопки отмены"""
     if callback.data == "cancel":

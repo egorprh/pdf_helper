@@ -2,12 +2,13 @@ from aiogram import Router
 from aiogram.types import CallbackQuery, Message
 
 from filters.admin_only import AdminOnly, NonAdminOnly
+from filters.private_only import PrivateOnly
 
 # Создаем роутер для заглушек
 plug_router = Router()
 
 
-@plug_router.message(AdminOnly())
+@plug_router.message(PrivateOnly(), AdminOnly())
 async def admin_hint(message: Message):
     """Catch-all для админов: подсказка по использованию"""
     await message.answer(
@@ -24,7 +25,7 @@ async def admin_hint(message: Message):
     )
 
 
-@plug_router.message(NonAdminOnly())
+@plug_router.message(PrivateOnly(), NonAdminOnly())
 async def not_allowed_message(message: Message):
     """Catch-all для не-админов: отказ в доступе"""
     await message.answer(
@@ -32,7 +33,7 @@ async def not_allowed_message(message: Message):
     )
 
 
-@plug_router.callback_query(NonAdminOnly())
+@plug_router.callback_query(PrivateOnly(), NonAdminOnly())
 async def not_allowed_callback(callback: CallbackQuery):
     """Catch-all для не-админов: отказ в доступе для callback"""
     await callback.message.answer(

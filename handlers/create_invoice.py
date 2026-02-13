@@ -16,6 +16,7 @@ from misc.utils import cleanup_files
 from utils.render_pdf import html_to_pdf_playwright
 from utils.utils import send_email_with_attachment
 from filters.admin_only import AdminOnly, NonAdminOnly
+from filters.private_only import PrivateOnly
 
 # Создаем роутер для создания инвойсов
 create_invoice_router = Router()
@@ -25,14 +26,14 @@ keyboards = InvoiceKeyboards(PRODUCT_MAP, DURATION_MAP)
 
 
 
-@create_invoice_router.message(AdminOnly(), Command("create_invoice"))
+@create_invoice_router.message(PrivateOnly(), AdminOnly(), Command("create_invoice"))
 async def start(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Введите почту:", reply_markup=keyboards.cancel_kb())
     await state.set_state(Form.email)
 
 
-@create_invoice_router.message(AdminOnly(), StateFilter(Form.email))
+@create_invoice_router.message(PrivateOnly(), AdminOnly(), StateFilter(Form.email))
 async def email(message: Message, state: FSMContext):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", message.text):
         await message.answer("Неверная почта, попробуйте снова.", reply_markup=keyboards.cancel_kb())
@@ -45,7 +46,7 @@ async def email(message: Message, state: FSMContext):
     await state.set_state(Form.product)
 
 
-@create_invoice_router.callback_query(AdminOnly(), StateFilter(Form.product, Form.duration, Form.confirm))
+@create_invoice_router.callback_query(PrivateOnly(), AdminOnly(), StateFilter(Form.product, Form.duration, Form.confirm))
 async def callbacks(callback: CallbackQuery, state: FSMContext, bot: Bot):
     data = callback.data
     if data == "cancel":
@@ -129,7 +130,7 @@ async def callbacks(callback: CallbackQuery, state: FSMContext, bot: Bot):
         pass
 
 
-@create_invoice_router.callback_query(AdminOnly(), StateFilter(Form.send_email_confirm))
+@create_invoice_router.callback_query(PrivateOnly(), AdminOnly(), StateFilter(Form.send_email_confirm))
 async def send_email_callbacks(callback: CallbackQuery, state: FSMContext, bot: Bot):
     data = callback.data
     if not data.startswith("sendmail:"):
@@ -179,7 +180,7 @@ async def send_email_callbacks(callback: CallbackQuery, state: FSMContext, bot: 
         pass
 
 
-@create_invoice_router.callback_query(AdminOnly(), StateFilter(Form.email, Form.name, Form.phone, Form.order_number, Form.purchase_date, Form.cost))
+@create_invoice_router.callback_query(PrivateOnly(), AdminOnly(), StateFilter(Form.email, Form.name, Form.phone, Form.order_number, Form.purchase_date, Form.cost))
 async def cancel_callback(callback: CallbackQuery, state: FSMContext):
     """Обработчик кнопки отмены для всех состояний ввода данных"""
     if callback.data == "cancel":
@@ -188,7 +189,7 @@ async def cancel_callback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@create_invoice_router.message(AdminOnly(), StateFilter(Form.product))
+@create_invoice_router.message(PrivateOnly(), AdminOnly(), StateFilter(Form.product))
 async def product_text_input(message: Message, state: FSMContext):
     title = (message.text or "").strip()
     if not title:
@@ -202,7 +203,7 @@ async def product_text_input(message: Message, state: FSMContext):
     await state.set_state(Form.duration)
 
 
-@create_invoice_router.message(AdminOnly(), StateFilter(Form.duration))
+@create_invoice_router.message(PrivateOnly(), AdminOnly(), StateFilter(Form.duration))
 async def duration_text_input(message: Message, state: FSMContext):
     title = (message.text or "").strip()
     if not title:
@@ -213,28 +214,28 @@ async def duration_text_input(message: Message, state: FSMContext):
     await state.set_state(Form.name)
 
 
-@create_invoice_router.message(AdminOnly(), StateFilter(Form.name))
+@create_invoice_router.message(PrivateOnly(), AdminOnly(), StateFilter(Form.name))
 async def name(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     await message.answer("Введите телефон:", reply_markup=keyboards.cancel_kb())
     await state.set_state(Form.phone)
 
 
-@create_invoice_router.message(AdminOnly(), StateFilter(Form.phone))
+@create_invoice_router.message(PrivateOnly(), AdminOnly(), StateFilter(Form.phone))
 async def phone(message: Message, state: FSMContext):
     await state.update_data(phone=message.text)
     await message.answer("Введите номер заказа:", reply_markup=keyboards.cancel_kb())
     await state.set_state(Form.order_number)
 
 
-@create_invoice_router.message(AdminOnly(), StateFilter(Form.order_number))
+@create_invoice_router.message(PrivateOnly(), AdminOnly(), StateFilter(Form.order_number))
 async def order(message: Message, state: FSMContext):
     await state.update_data(order_number=message.text)
     await message.answer("Введите дату покупки (ДД/ММ/ГГГГ):", reply_markup=keyboards.cancel_kb())
     await state.set_state(Form.purchase_date)
 
 
-@create_invoice_router.message(AdminOnly(), StateFilter(Form.purchase_date))
+@create_invoice_router.message(PrivateOnly(), AdminOnly(), StateFilter(Form.purchase_date))
 async def date(message: Message, state: FSMContext):
     # Валидация формата даты ДД/ММ/ГГГГ
     date_pattern = r'^\d{2}/\d{2}/\d{4}$'
@@ -255,7 +256,7 @@ async def date(message: Message, state: FSMContext):
     await state.set_state(Form.cost)
 
 
-@create_invoice_router.message(AdminOnly(), StateFilter(Form.cost))
+@create_invoice_router.message(PrivateOnly(), AdminOnly(), StateFilter(Form.cost))
 async def cost(message: Message, state: FSMContext):
     await state.update_data(cost=message.text)
     data = await state.get_data()
