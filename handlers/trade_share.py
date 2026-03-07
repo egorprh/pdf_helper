@@ -336,6 +336,21 @@ async def handle_forex_share(message: Message, bot: Bot):
     profit_class = "red" if "-" in profit_raw else "blue"
     sl_class = "text-red" if profit_is_negative else "text-gray-8"
     tp_class = "text-gray-8" if profit_is_negative else "text-green"
+    delta_raw = data["delta"].strip()
+    delta_is_negative = delta_raw.startswith("-")
+    delta_arrow_svg = (
+        '<svg width="26" height="17" viewBox="0 0 26 17" fill="none" '
+        'xmlns="http://www.w3.org/2000/svg">'
+        '<path d="M23.7676 1.76782L12.7676 12.7678L1.76758 1.76782" '
+        'stroke-width="5" />'
+        "</svg>"
+        if delta_is_negative
+        else '<svg width="26" height="17" viewBox="0 0 26 17" fill="none" '
+        'xmlns="http://www.w3.org/2000/svg">'
+        '<path d="M1.76758 14.5356L12.7676 3.53564L23.7676 14.5356" '
+        'stroke-width="5" />'
+        "</svg>"
+    )
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir_path = Path(tmpdir)
@@ -362,6 +377,7 @@ async def handle_forex_share(message: Message, bot: Bot):
             .replace("{open}", formatted_values["open"])
             .replace("{close}", formatted_values["close"])
             .replace("{delta}", data["delta"])
+            .replace("{delta_arrow_svg}", delta_arrow_svg)
             .replace("{pct}", formatted_values["pct"])
             .replace("{profit}", formatted_values["profit"])
             .replace("{profit_class}", profit_class)
