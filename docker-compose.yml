@@ -19,6 +19,8 @@ services:
     volumes:
       # Временная директория для генерации файлов
       - temp_files:/app/temp
+      # Постоянное хранилище для channels.json
+      - ./channels.json:/app/channels.json
     env_file:
       - .env
     networks:
