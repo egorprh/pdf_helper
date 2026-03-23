@@ -20,7 +20,7 @@ services:
       # Временная директория для генерации файлов
       - temp_files:/app/temp
       # Постоянное хранилище для channels.json
-      - ./channels.json:/app/channels.json
+      - ./channels:/app/channels
     env_file:
       - .env
     networks:

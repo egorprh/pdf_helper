@@ -1,3 +1,4 @@
+import errno
 import json
 import logging
 import os
@@ -18,7 +19,7 @@ channel_comments_router = Router()
 
 
 def _channels_file_path() -> Path:
-    return Path(__file__).resolve().parents[1] / "channels.json"
+    return Path(__file__).resolve().parents[1] / "channels" / "channels.json"
 
 
 def load_channels() -> List[Dict[str, Any]]:
@@ -46,10 +47,28 @@ def save_channels(channels: List[Dict[str, Any]]) -> bool:
     tmp_path = path.with_suffix(path.suffix + ".tmp")
 
     try:
+        path.parent.mkdir(parents=True, exist_ok=True)
         with tmp_path.open("w", encoding="utf-8") as f:
             json.dump(channels, f, ensure_ascii=False, indent=4)
-        os.replace(tmp_path, path)
-        return True
+        try:
+            os.replace(tmp_path, path)
+            return True
+        except OSError as exc:
+            # На bind-mount файла замена может падать с EBUSY, пишем напрямую.
+            if exc.errno != errno.EBUSY:
+                raise
+            logger.warning(
+                "Atomic replace failed for %s (EBUSY). Fallback to direct write.",
+                path,
+            )
+            with path.open("w", encoding="utf-8") as f:
+                json.dump(channels, f, ensure_ascii=False, indent=4)
+            try:
+                if tmp_path.exists():
+                    tmp_path.unlink()
+            except OSError:
+                pass
+            return True
     except Exception as exc:  # noqa: BLE001
         logger.error("Failed to save channels.json: %s", exc)
         try:

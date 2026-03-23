@@ -3,6 +3,7 @@ from .plug import plug_router
 from .trade_share import trade_share_router
 from .create_user_pdf import create_user_pdf_router
 from .channel_comments import channel_comments_router
+from .soft_signal import soft_signal_router
 
 __all__ = [
     "create_invoice_router",
@@ -10,4 +11,5 @@ __all__ = [
     "trade_share_router",
     "create_user_pdf_router",
     "channel_comments_router",
+    "soft_signal_router",
 ]
